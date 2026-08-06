@@ -1,22 +1,14 @@
+from ai import ask_ai
+
 print("REI 0.1")
-print("Personal AI Assistant")
-
-name = input("What is your name? ")
-
-print(f"Hello, {name}. REI is online.")
 
 while True:
-    command = input("You: ")
+    prompt = input("You: ")
 
-    if command == "hello":
-        print(f"REI: Hello, {name}!")
-
-    elif command == "status":
-        print("REI: All systems operational.")
-
-    elif command == "exit":
-        print("REI: Going offline.")
+    if prompt.lower() == "exit":
+        print("REI: Goodbye!")
         break
 
-    else:
-        print(f"REI: I don't understand '{command}' yet.")
+    answer = ask_ai(prompt)
+
+    print(f"REI: {answer}")
