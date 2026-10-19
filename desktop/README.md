@@ -22,10 +22,10 @@ The Windows preview build retains the earlier `dev.rei.os.preview` profile
 identifier. Existing users should close their old preview before opening it.
 No private profile or credentials are included in source or binary downloads.
 
-The macOS universal `.dmg` supports Apple Silicon and Intel. It uses an ad-hoc
-signature, not an Apple Developer ID certificate, and is not notarized. macOS
-may block its first opening. The read-only GitHub build workflow uses no Apple
-credentials and uploads build artifacts; release publication is a separate step.
+A macOS universal build configuration is included for development, but a Mac
+download is not available in this Windows beta. Mac distribution validation
+is incomplete. Its optional workflow uses no Apple credentials; any future
+beta would use an ad-hoc signature and would not be notarized.
 
 ## Current scope
 
