@@ -6,7 +6,7 @@ classes, and a daily planner in one local-first desktop app.
 - [Product and features](https://reiandraa.com/projects/rei/)
 - [Try the browser demo](https://reiandraa.com/projects/rei/demo/)
 - [Desktop source and setup](desktop/README.md)
-- [Windows and macOS beta downloads](https://github.com/Reiandraa/rei/releases)
+- [Windows beta downloads](https://github.com/Reiandraa/rei/releases)
 
 ## REI OS desktop
 
