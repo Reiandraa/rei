@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-task-get"
+description = "Enables the task_get command without any pre-configured scope."
+commands.allow = ["task_get"]
+
+[[permission]]
+identifier = "deny-task-get"
+description = "Denies the task_get command without any pre-configured scope."
+commands.deny = ["task_get"]

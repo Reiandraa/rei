@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-task-update"
+description = "Enables the task_update command without any pre-configured scope."
+commands.allow = ["task_update"]
+
+[[permission]]
+identifier = "deny-task-update"
+description = "Denies the task_update command without any pre-configured scope."
+commands.deny = ["task_update"]

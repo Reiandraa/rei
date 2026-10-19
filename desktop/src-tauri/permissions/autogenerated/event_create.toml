@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-event-create"
+description = "Enables the event_create command without any pre-configured scope."
+commands.allow = ["event_create"]
+
+[[permission]]
+identifier = "deny-event-create"
+description = "Denies the event_create command without any pre-configured scope."
+commands.deny = ["event_create"]

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-polling-set"
+description = "Enables the polling_set command without any pre-configured scope."
+commands.allow = ["polling_set"]
+
+[[permission]]
+identifier = "deny-polling-set"
+description = "Denies the polling_set command without any pre-configured scope."
+commands.deny = ["polling_set"]

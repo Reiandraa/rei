@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-source-list"
+description = "Enables the source_list command without any pre-configured scope."
+commands.allow = ["source_list"]
+
+[[permission]]
+identifier = "deny-source-list"
+description = "Denies the source_list command without any pre-configured scope."
+commands.deny = ["source_list"]

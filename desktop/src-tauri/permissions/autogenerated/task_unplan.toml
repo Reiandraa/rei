@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-task-unplan"
+description = "Enables the task_unplan command without any pre-configured scope."
+commands.allow = ["task_unplan"]
+
+[[permission]]
+identifier = "deny-task-unplan"
+description = "Denies the task_unplan command without any pre-configured scope."
+commands.deny = ["task_unplan"]

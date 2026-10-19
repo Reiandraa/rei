@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-candidate-batch-approve"
+description = "Enables the candidate_batch_approve command without any pre-configured scope."
+commands.allow = ["candidate_batch_approve"]
+
+[[permission]]
+identifier = "deny-candidate-batch-approve"
+description = "Denies the candidate_batch_approve command without any pre-configured scope."
+commands.deny = ["candidate_batch_approve"]

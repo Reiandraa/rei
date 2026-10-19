@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-auto-summary"
+description = "Enables the auto_summary command without any pre-configured scope."
+commands.allow = ["auto_summary"]
+
+[[permission]]
+identifier = "deny-auto-summary"
+description = "Denies the auto_summary command without any pre-configured scope."
+commands.deny = ["auto_summary"]
