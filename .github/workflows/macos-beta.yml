@@ -17,10 +17,10 @@ jobs:
       run:
         working-directory: desktop
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '22'
       - name: Install Rust targets
@@ -34,7 +34,7 @@ jobs:
           npm run test:e2e
           node scripts/tools/check-ipc-schema.mjs
       - name: Build Apple Silicon and Intel beta
-        run: npm run tauri -- build --target universal-apple-darwin --bundles dmg --config tauri.macos-beta.conf.json
+        run: npm run tauri -- build --target universal-apple-darwin --bundles app,dmg --config tauri.macos-beta.conf.json
       - name: Verify bundle and prepare download
         run: |
           set -eu
