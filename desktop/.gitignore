@@ -1,0 +1,15 @@
+node_modules/
+dist/
+target/
+.build/
+src-tauri/gen/
+.env
+.env.*
+*.sqlite*
+*.db
+*.pem
+*.key
+*.p12
+*.pfx
+*.log
+.DS_Store
