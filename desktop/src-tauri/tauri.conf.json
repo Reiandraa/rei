@@ -10,7 +10,17 @@
     "beforeBuildCommand": "npm run build"
   },
   "app": {
-    "windows": [{ "label": "main", "title": "REI OS", "width": 1280, "height": 800, "minWidth": 390, "minHeight": 600 }],
+    "windows": [
+      {
+        "label": "main",
+        "title": "REI OS",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 390,
+        "minHeight": 600,
+        "backgroundColor": "#20241f"
+      }
+    ],
     "security": {
       "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost"
     }
@@ -18,6 +28,11 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/icon.ico"]
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/icon.ico",
+      "icons/icon.icns"
+    ]
   }
 }
