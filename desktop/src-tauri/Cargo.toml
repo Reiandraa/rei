@@ -1,0 +1,51 @@
+[package]
+name = "rei-os"
+version = "0.1.0"
+edition = "2021"
+description = "REI OS local-first desktop app"
+
+[lib]
+name = "rei_os_lib"
+path = "src/lib.rs"
+
+[[bin]]
+name = "rei-os"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+rusqlite = { version = "0.32", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4"] }
+jiff = { version = "0.2", default-features = false, features = ["std", "tzdb-bundle-always"] }
+sha2 = "0.10"
+chacha20poly1305 = "0.10"
+hkdf = "0.12"
+hmac = "0.12"
+getrandom = "0.2"
+zeroize = "1"
+x25519-dalek = { version = "2", features = ["static_secrets", "zeroize"] }
+# Provider connectors (docs/PROVIDER-CONNECTORS-NEXT.md): OS vault, TLS, IMAP/MIME, HTTP, JWT.
+keyring = { version = "3", features = ["windows-native", "apple-native"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
+webpki-roots = "0.26"
+imap = { version = "3.0.0-alpha.15", default-features = false }
+imap-proto = "0.16"
+mail-parser = "0.9"
+ureq = { version = "2", default-features = false, features = ["tls", "json"] }
+jsonwebtoken = "9"
+url = "2"
+open = "5"
+
+[dev-dependencies]
+tempfile = "3"
+rcgen = "0.13"
+ureq = { version = "2", default-features = false }
+url = "2"
+jiff = { version = "0.2", default-features = false, features = ["std"] }
+jsonwebtoken = "9"
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
