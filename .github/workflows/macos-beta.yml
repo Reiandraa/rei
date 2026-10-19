@@ -40,7 +40,7 @@ jobs:
           set -eu
           app='src-tauri/target/universal-apple-darwin/release/bundle/macos/REI OS.app'
           codesign --verify --deep --strict "$app"
-          lipo -verify_arch arm64 x86_64 "$app/Contents/MacOS/rei-os"
+          lipo "$app/Contents/MacOS/rei-os" -verify_arch arm64 x86_64
           mkdir -p beta-artifacts
           find src-tauri/target/universal-apple-darwin/release/bundle/dmg -name '*.dmg' -exec cp '{}' beta-artifacts/REI-OS-macOS-universal.dmg \;
           test -s beta-artifacts/REI-OS-macOS-universal.dmg
