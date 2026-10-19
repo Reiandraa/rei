@@ -121,7 +121,7 @@ holds the IPC contract, and `tests/ui/` holds synthetic interface tests.
 This public source export omits personal inboxes, databases, credentials,
 development transcripts, cost ledgers, builder prompts, and build artifacts.
 It preserves runtime source and synthetic tests from local app commit
-`1ff868d30e3b50d83704b60195ac6d65f7f67b6c`. The export's package scripts omit
+`c22de588c8aea639e031dcdc9ee1a7d3517302da`. The export's package scripts omit
 the private development-phase evidence launchers. Dependency versions and
 runtime implementation are unchanged. The earlier Python prototype remains
 at the repository root.
