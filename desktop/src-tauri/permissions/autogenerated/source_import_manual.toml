@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-source-import-manual"
+description = "Enables the source_import_manual command without any pre-configured scope."
+commands.allow = ["source_import_manual"]
+
+[[permission]]
+identifier = "deny-source-import-manual"
+description = "Denies the source_import_manual command without any pre-configured scope."
+commands.deny = ["source_import_manual"]

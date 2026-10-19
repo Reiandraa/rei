@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-assistant-workflow-set"
+description = "Enables the assistant_workflow_set command without any pre-configured scope."
+commands.allow = ["assistant_workflow_set"]
+
+[[permission]]
+identifier = "deny-assistant-workflow-set"
+description = "Denies the assistant_workflow_set command without any pre-configured scope."
+commands.deny = ["assistant_workflow_set"]

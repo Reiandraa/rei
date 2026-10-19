@@ -1,0 +1,951 @@
+{
+  "ipc_version": 1,
+  "note": "Commands implemented through the planner phase. Checked against Rust (src-tauri/tests/integration.rs) and TypeScript (scripts/tools/check-ipc-schema.mjs). List responses name the item fields.",
+  "commands": {
+    "ai_settings": {
+      "request": ["req"],
+      "response": ["revision","provider","model","local_model","openai_saved","anthropic_saved","daily_limit","used_today","available_models"]
+    },
+    "app_status": {
+      "request": null,
+      "response": [
+        "ipc_version",
+        "schema_version",
+        "lock_state",
+        "device_id"
+      ]
+    },
+    "health": {
+      "request": null,
+      "response": [
+        "database_ok",
+        "schema_version"
+      ]
+    },
+    "settings_get": {
+      "request": [
+        "key"
+      ],
+      "response": [
+        "key",
+        "value",
+        "revision"
+      ]
+    },
+    "settings_set": {
+      "request": [
+        "key",
+        "value",
+        "expected_revision"
+      ],
+      "response": [
+        "key",
+        "value",
+        "revision"
+      ]
+    },
+    "task_list": {
+      "request": [
+        "status"
+      ],
+      "response": [
+        "id",
+        "revision",
+        "title",
+        "notes",
+        "status",
+        "priority",
+        "energy",
+        "duration_min",
+        "due_date",
+        "due_at_utc",
+        "due_tz",
+        "due_at_local",
+        "recurrence",
+        "reminder_offsets_min",
+        "created_at",
+        "updated_at",
+        "has_schedule_changes",
+        "schedule_from"
+      ]
+    },
+    "task_get": {
+      "request": [
+        "id"
+      ],
+      "response": [
+        "id",
+        "revision",
+        "title",
+        "notes",
+        "status",
+        "priority",
+        "energy",
+        "duration_min",
+        "due_date",
+        "due_at_utc",
+        "due_tz",
+        "due_at_local",
+        "recurrence",
+        "reminder_offsets_min",
+        "created_at",
+        "updated_at",
+        "plan_date",
+        "plan_time",
+        "plan_duration_min",
+        "plan_tz",
+        "undo_action",
+        "has_schedule_changes",
+        "schedule_from"
+      ]
+    },
+    "task_create": {
+      "request": [
+        "title",
+        "notes",
+        "priority",
+        "energy",
+        "duration_min",
+        "due",
+        "recurrence",
+        "reminder_offsets_min"
+      ],
+      "response": [
+        "id",
+        "revision",
+        "title",
+        "notes",
+        "status",
+        "priority",
+        "energy",
+        "duration_min",
+        "due_date",
+        "due_at_utc",
+        "due_tz",
+        "due_at_local",
+        "recurrence",
+        "reminder_offsets_min",
+        "created_at",
+        "updated_at",
+        "plan_date",
+        "plan_time",
+        "plan_duration_min",
+        "plan_tz",
+        "undo_action",
+        "has_schedule_changes",
+        "schedule_from"
+      ]
+    },
+    "task_update": {
+      "request": [
+        "id",
+        "expected_revision",
+        "title",
+        "notes",
+        "status",
+        "priority",
+        "energy",
+        "duration_min",
+        "due",
+        "clear_due",
+        "reminder_offsets_min",
+        "schedule"
+      ],
+      "response": [
+        "id",
+        "revision",
+        "title",
+        "notes",
+        "status",
+        "priority",
+        "energy",
+        "duration_min",
+        "due_date",
+        "due_at_utc",
+        "due_tz",
+        "due_at_local",
+        "recurrence",
+        "reminder_offsets_min",
+        "created_at",
+        "updated_at",
+        "plan_date",
+        "plan_time",
+        "plan_duration_min",
+        "plan_tz",
+        "undo_action",
+        "has_schedule_changes",
+        "schedule_from"
+      ]
+    },
+    "task_complete": {
+      "request": [
+        "id",
+        "expected_revision"
+      ],
+      "response": [
+        "id",
+        "revision",
+        "title",
+        "notes",
+        "status",
+        "priority",
+        "energy",
+        "duration_min",
+        "due_date",
+        "due_at_utc",
+        "due_tz",
+        "due_at_local",
+        "recurrence",
+        "reminder_offsets_min",
+        "created_at",
+        "updated_at",
+        "plan_date",
+        "plan_time",
+        "plan_duration_min",
+        "plan_tz",
+        "undo_action",
+        "has_schedule_changes",
+        "schedule_from"
+      ]
+    },
+    "task_delete": {
+      "request": [
+        "id",
+        "expected_revision",
+        "confirm"
+      ],
+      "response": []
+    },
+    "occurrence_edit": {
+      "request": [
+        "task_id",
+        "expected_revision",
+        "scope",
+        "action",
+        "original_local",
+        "new_local"
+      ],
+      "response": [
+        "id",
+        "revision",
+        "title",
+        "notes",
+        "status",
+        "priority",
+        "energy",
+        "duration_min",
+        "due_date",
+        "due_at_utc",
+        "due_tz",
+        "due_at_local",
+        "recurrence",
+        "reminder_offsets_min",
+        "created_at",
+        "updated_at",
+        "plan_date",
+        "plan_time",
+        "plan_duration_min",
+        "plan_tz",
+        "undo_action",
+        "has_schedule_changes",
+        "schedule_from"
+      ]
+    },
+    "agenda_list": {
+      "request": [
+        "from",
+        "to"
+      ],
+      "response": [
+        "kind",
+        "id",
+        "title",
+        "local_start",
+        "all_day",
+        "state",
+        "original_local",
+        "task_revision",
+        "recurring",
+        "read_only",
+        "conflict",
+        "location"
+      ]
+    },
+    "event_list": {
+      "request": [
+        "from",
+        "to"
+      ],
+      "response": [
+        "id",
+        "revision",
+        "title",
+        "all_day",
+        "start_local",
+        "end_local",
+        "start_utc",
+        "end_utc",
+        "tz",
+        "provider",
+        "read_only"
+      ]
+    },
+    "event_create": {
+      "request": [
+        "title",
+        "all_day",
+        "start_local",
+        "end_local",
+        "tz"
+      ],
+      "response": [
+        "id",
+        "revision",
+        "title",
+        "all_day",
+        "start_local",
+        "end_local",
+        "start_utc",
+        "end_utc",
+        "tz",
+        "provider",
+        "read_only"
+      ]
+    },
+    "event_update": {
+      "request": [
+        "id",
+        "expected_revision",
+        "title",
+        "start_local",
+        "end_local",
+        "tz"
+      ],
+      "response": [
+        "id",
+        "revision",
+        "title",
+        "all_day",
+        "start_local",
+        "end_local",
+        "start_utc",
+        "end_utc",
+        "tz",
+        "provider",
+        "read_only"
+      ]
+    },
+    "event_delete": {
+      "request": [
+        "id",
+        "expected_revision",
+        "confirm"
+      ],
+      "response": []
+    },
+    "proposal_list": {
+      "request": [
+        "status"
+      ],
+      "response": [
+        "id",
+        "action",
+        "target_id",
+        "target_title",
+        "expected_target_revision",
+        "payload",
+        "payload_hash",
+        "expires_at",
+        "status",
+        "confidence",
+        "rationale",
+        "created_at"
+      ]
+    },
+    "proposal_approve": {
+      "request": [
+        "id",
+        "payload_hash"
+      ],
+      "response": [
+        "id",
+        "action",
+        "target_id",
+        "target_title",
+        "expected_target_revision",
+        "payload",
+        "payload_hash",
+        "expires_at",
+        "status",
+        "confidence",
+        "rationale",
+        "created_at"
+      ]
+    },
+    "proposal_reject": {
+      "request": [
+        "id"
+      ],
+      "response": [
+        "id",
+        "action",
+        "target_id",
+        "target_title",
+        "expected_target_revision",
+        "payload",
+        "payload_hash",
+        "expires_at",
+        "status",
+        "confidence",
+        "rationale",
+        "created_at"
+      ]
+    },
+    "planner_suggest_reschedules": {
+      "request": [
+        "today"
+      ],
+      "response": [
+        "id",
+        "action",
+        "target_id",
+        "target_title",
+        "expected_target_revision",
+        "payload",
+        "payload_hash",
+        "expires_at",
+        "status",
+        "confidence",
+        "rationale",
+        "created_at"
+      ]
+    },
+    "inbox_overview": {
+      "request": null,
+      "response": [
+        "connections",
+        "live_fetch_available",
+        "sources_total",
+        "unanalysed",
+        "pending_candidates",
+        "attention",
+        "source_tasks"
+      ]
+    },
+    "source_list": {
+      "request": [
+        "kind",
+        "limit",
+        "offset"
+      ],
+      "response": [
+        "id",
+        "kind",
+        "label",
+        "sender",
+        "subject",
+        "snippet",
+        "received_at",
+        "analysis",
+        "pending_candidates"
+      ]
+    },
+    "source_get": {
+      "request": [
+        "id"
+      ],
+      "response": [
+        "id",
+        "account_name",
+        "provider",
+        "kind",
+        "label",
+        "sender",
+        "subject",
+        "body_text",
+        "received_at",
+        "ingested_at",
+        "provider_modified_at",
+        "deleted",
+        "content_hash",
+        "analysis",
+        "candidates"
+      ]
+    },
+    "source_import_manual": {
+      "request": [
+        "title",
+        "text",
+        "link"
+      ],
+      "response": [
+        "id",
+        "label",
+        "body_text",
+        "content_hash"
+      ]
+    },
+    "model_status": {
+      "request": [
+        "model"
+      ],
+      "response": [
+        "state",
+        "model",
+        "busy"
+      ]
+    },
+    "source_analyze": {
+      "request": [
+        "id",
+        "model"
+      ],
+      "response": [
+        "status",
+        "created",
+        "already_known",
+        "dropped_uncited",
+        "truncated_input",
+        "model",
+        "detail",
+        "candidates"
+      ]
+    },
+    "source_analyze_cancel": {
+      "request": null,
+      "response": "boolean"
+    },
+    "candidate_approve": {
+      "request": [
+        "id",
+        "payload_hash",
+        "title",
+        "due_date",
+        "date_resolved",
+        "due_time"
+      ],
+      "response": [
+        "task_id",
+        "replayed",
+        "candidate"
+      ]
+    },
+    "candidate_reject": {
+      "request": [
+        "id",
+        "payload_hash"
+      ],
+      "response": [
+        "id",
+        "source_id",
+        "source_subject",
+        "source_hash",
+        "kind",
+        "title",
+        "due_date",
+        "date_text",
+        "date_status",
+        "excerpt",
+        "confidence",
+        "model",
+        "extracted_at",
+        "status",
+        "payload_hash",
+        "expires_at",
+        "expired",
+        "task_id",
+        "source_state",
+        "conflict",
+        "schedule_active"
+      ]
+    },
+    "connections_status": {
+      "request": null,
+      "response": [
+        "accounts",
+        "polling",
+        "hiz_host",
+        "hiz_port",
+        "os_vault_available"
+      ]
+    },
+    "hiz_configure": {
+      "request": [
+        "account_id",
+        "username",
+        "initial_count"
+      ],
+      "response": "string"
+    },
+    "hiz_sign_in": {
+      "request": [
+        "account_id",
+        "password"
+      ],
+      "response": "string[]"
+    },
+    "teams_configure": {
+      "request": [
+        "account_id",
+        "client_id",
+        "tenant",
+        "channels"
+      ],
+      "response": "string"
+    },
+    "teams_sign_in": {
+      "request": [
+        "account_id"
+      ],
+      "response": "string"
+    },
+    "teams_discover": {
+      "request": [
+        "account_id"
+      ],
+      "response": "number"
+    },
+    "connection_select_sources": {
+      "request": [
+        "account_id",
+        "selected"
+      ],
+      "response": "number"
+    },
+    "connection_fetch_now": {
+      "request": [
+        "account_id"
+      ],
+      "response": "object"
+    },
+    "connection_fetch_cancel": {
+      "request": [
+        "account_id"
+      ],
+      "response": "boolean"
+    },
+    "connection_disconnect": {
+      "request": [
+        "account_id",
+        "purge"
+      ],
+      "response": "boolean"
+    },
+    "polling_set": {
+      "request": [
+        "enabled",
+        "interval_minutes"
+      ],
+      "response": [
+        "enabled",
+        "interval_minutes"
+      ]
+    },
+    "auto_settings_get": {
+      "request": null,
+      "response": [
+        "enabled",
+        "paused",
+        "model",
+        "worker_state",
+        "worker_detail",
+        "backoff_until",
+        "date_zone"
+      ]
+    },
+    "auto_settings_set": {
+      "request": [
+        "enabled",
+        "paused",
+        "model",
+        "date_zone"
+      ],
+      "response": [
+        "enabled",
+        "paused",
+        "model",
+        "worker_state",
+        "worker_detail",
+        "backoff_until",
+        "date_zone"
+      ]
+    },
+    "auto_summary": {
+      "request": [
+        "limit",
+        "actionable_offset",
+        "updates_offset",
+        "routine_offset"
+      ],
+      "response": [
+        "settings",
+        "inference_busy",
+        "queue",
+        "sources_total",
+        "not_analysed",
+        "actionable_total",
+        "actionable",
+        "needs_decision",
+        "updates_total",
+        "updates",
+        "routine_total",
+        "routine",
+        "attention_total",
+        "attention",
+        "all_analysed"
+      ]
+    },
+    "auto_queue_cancel": {
+      "request": null,
+      "response": "number"
+    },
+    "auto_queue_retry": {
+      "request": [
+        "source_id"
+      ],
+      "response": "number"
+    },
+    "candidate_batch_approve": {
+      "request": [
+        "items"
+      ],
+      "response": [
+        "committed",
+        "created",
+        "replayed",
+        "results"
+      ]
+    },
+    "task_plan": {
+      "request": [
+        "id",
+        "expected_revision",
+        "plan_date",
+        "plan_time",
+        "duration_min",
+        "tz"
+      ],
+      "response": [
+        "id",
+        "revision",
+        "title",
+        "notes",
+        "status",
+        "priority",
+        "energy",
+        "duration_min",
+        "due_date",
+        "due_at_utc",
+        "due_tz",
+        "due_at_local",
+        "recurrence",
+        "reminder_offsets_min",
+        "created_at",
+        "updated_at",
+        "plan_date",
+        "plan_time",
+        "plan_duration_min",
+        "plan_tz",
+        "undo_action",
+        "has_schedule_changes",
+        "schedule_from"
+      ]
+    },
+    "task_unplan": {
+      "request": [
+        "id",
+        "expected_revision"
+      ],
+      "response": [
+        "id",
+        "revision",
+        "title",
+        "notes",
+        "status",
+        "priority",
+        "energy",
+        "duration_min",
+        "due_date",
+        "due_at_utc",
+        "due_tz",
+        "due_at_local",
+        "recurrence",
+        "reminder_offsets_min",
+        "created_at",
+        "updated_at",
+        "plan_date",
+        "plan_time",
+        "plan_duration_min",
+        "plan_tz",
+        "undo_action",
+        "has_schedule_changes",
+        "schedule_from"
+      ]
+    },
+    "task_reopen": {
+      "request": [
+        "id",
+        "expected_revision"
+      ],
+      "response": [
+        "id",
+        "revision",
+        "title",
+        "notes",
+        "status",
+        "priority",
+        "energy",
+        "duration_min",
+        "due_date",
+        "due_at_utc",
+        "due_tz",
+        "due_at_local",
+        "recurrence",
+        "reminder_offsets_min",
+        "created_at",
+        "updated_at",
+        "plan_date",
+        "plan_time",
+        "plan_duration_min",
+        "plan_tz",
+        "undo_action",
+        "has_schedule_changes",
+        "schedule_from"
+      ]
+    },
+    "task_undo": {
+      "request": [
+        "id",
+        "expected_revision"
+      ],
+      "response": [
+        "id",
+        "revision",
+        "title",
+        "notes",
+        "status",
+        "priority",
+        "energy",
+        "duration_min",
+        "due_date",
+        "due_at_utc",
+        "due_tz",
+        "due_at_local",
+        "recurrence",
+        "reminder_offsets_min",
+        "created_at",
+        "updated_at",
+        "plan_date",
+        "plan_time",
+        "plan_duration_min",
+        "plan_tz",
+        "undo_action",
+        "has_schedule_changes",
+        "schedule_from"
+      ]
+    },
+    "model_list": {
+      "request": [],
+      "response": [
+        "state",
+        "models"
+      ]
+    },
+    "assistant_workflow_set": {
+      "request": [
+        "enabled",
+        "account_id"
+      ],
+      "response": [
+        "settings",
+        "polling",
+        "selected_inbox"
+      ]
+    },
+    "schedule_change_apply": {
+      "request": [
+        "candidate_id",
+        "payload_hash",
+        "task_id",
+        "expected_revision",
+        "scope",
+        "date",
+        "new_time",
+        "location"
+      ],
+      "response": [
+        "id",
+        "task_id",
+        "revision",
+        "replayed",
+        "active"
+      ]
+    },
+    "schedule_change_undo": {
+      "request": [
+        "id",
+        "expected_revision"
+      ],
+      "response": [
+        "id",
+        "task_id",
+        "revision",
+        "replayed",
+        "active"
+      ]
+    },
+    "calendar_day_labels": {
+      "request": [
+        "month"
+      ],
+      "response": [
+        "state",
+        "labels"
+      ]
+    },
+    "assistant_summary_get": {
+      "request": [],
+      "response": [
+        "state",
+        "enabled",
+        "model",
+        "updated_at",
+        "detail",
+        "total",
+        "scope_limit",
+        "pending",
+        "routine",
+        "entries"
+      ]
+    },
+    "assistant_summary_refresh": {
+      "request": [],
+      "response": [
+        "state",
+        "enabled",
+        "model",
+        "updated_at",
+        "detail",
+        "total",
+        "scope_limit",
+        "pending",
+        "routine",
+        "entries"
+      ]
+    },
+    "assistant_memory": {
+      "request": [
+        "action",
+        "id",
+        "text",
+        "expected_hash",
+        "confirm"
+      ],
+      "response": [
+        "id",
+        "text",
+        "hash"
+      ]
+    }
+  }
+}

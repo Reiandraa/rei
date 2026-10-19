@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-source-analyze"
+description = "Enables the source_analyze command without any pre-configured scope."
+commands.allow = ["source_analyze"]
+
+[[permission]]
+identifier = "deny-source-analyze"
+description = "Denies the source_analyze command without any pre-configured scope."
+commands.deny = ["source_analyze"]

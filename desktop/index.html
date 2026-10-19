@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>REI OS</title>
+    <style>
+      html{background:#20241f}body{margin:0}.boot-screen{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;background:#20241f;color:#e5ecde;font:14px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}.boot-content{width:min(380px,calc(100% - 48px));text-align:center}.boot-mark{display:grid;place-items:center;width:88px;height:88px;border-radius:23px;margin:0 auto 25px;background:linear-gradient(135deg,#334d35,#203524);color:#c8ddb7}.boot-mark svg{width:55px;height:55px}.boot-content h1{font-size:23px;letter-spacing:3px;font-weight:550;margin:0 0 25px}.boot-title{font-size:15px;margin:0 0 9px}.boot-detail{color:#aebe9f;font-size:12px;min-height:40px;margin:0 0 24px}.boot-steps{display:flex;justify-content:center;gap:24px;margin:0 0 26px;padding:0;list-style:none;font-size:11px;color:#aebe9f}.boot-step{display:flex;align-items:center;gap:6px}.boot-step-dot{width:6px;height:6px;border-radius:50%;background:#56664b}.boot-step.active .boot-step-dot{background:#c3d7b0;animation:boot-pulse 1.2s ease-in-out infinite}.boot-step.done .boot-step-dot{background:#a8c18f}.boot-line{width:120px;height:3px;overflow:hidden;border-radius:3px;background:#3a4832;margin:0 auto 26px}.boot-line:after{content:"";display:block;width:50px;height:100%;border-radius:3px;background:#bdcfaa;animation:boot-slide 1.5s ease-in-out infinite}.boot-footnote{font-size:11px;color:#94a78a}.boot-button{border:1px solid #789064;border-radius:7px;background:#bdcfaa;color:#20321a;padding:10px 20px;font:inherit;cursor:pointer;margin-bottom:14px}.boot-button:focus-visible{outline:2px solid #d6e7c6;outline-offset:5px}.boot-button[hidden]{display:none}.boot-notice{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:900;max-width:calc(100% - 32px);width:max-content;background:var(--bg,#20241f);color:var(--fg,#e5ecde);border:1px solid var(--line,#48513f);border-radius:9px;box-shadow:0 8px 32px #0003;padding:12px 18px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:15px;flex-wrap:wrap}.boot-notice span{max-width:470px}.boot-notice a{color:inherit;text-underline-offset:3px}.boot-notice button{background:none;border:0;color:inherit;font:inherit;cursor:pointer;min-height:36px;padding:0 5px}@keyframes boot-slide{0%{transform:translateX(-55px)}100%{transform:translateX(130px)}}@keyframes boot-pulse{50%{opacity:.35}}@media(prefers-reduced-motion:reduce){.boot-line:after,.boot-step.active .boot-step-dot{animation:none}.boot-line:after{width:100%;opacity:.7}}
+    </style>
+    <script src="/boot.js" defer></script>
+  </head>
+  <body>
+    <div id="rei-boot-fallback" class="boot-screen" role="status" aria-live="polite" aria-busy="true">
+      <div class="boot-content">
+        <div class="boot-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22v-9 M12 16C4 16 3 11 3 6c6 0 9 3 9 10 M12 12c0-7 3-10 9-10 0 6-3 10-9 10"/></svg></div>
+        <h1>REI</h1><p id="rei-boot-title" class="boot-title">Opening your workspace…</p>
+        <p id="rei-boot-detail" class="boot-detail">Starting the desktop interface. Your planner will be ready shortly.</p>
+        <div class="boot-line" aria-hidden="true"></div>
+        <button id="rei-boot-retry" class="boot-button" type="button" hidden>Try again</button>
+        <p class="boot-footnote">A little structure. More room for your day.</p>
+        <noscript>JavaScript is needed to open the REI desktop interface.</noscript>
+      </div>
+    </div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

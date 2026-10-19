@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-teams-discover"
+description = "Enables the teams_discover command without any pre-configured scope."
+commands.allow = ["teams_discover"]
+
+[[permission]]
+identifier = "deny-teams-discover"
+description = "Denies the teams_discover command without any pre-configured scope."
+commands.deny = ["teams_discover"]

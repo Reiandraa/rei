@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-planner-suggest-reschedules"
+description = "Enables the planner_suggest_reschedules command without any pre-configured scope."
+commands.allow = ["planner_suggest_reschedules"]
+
+[[permission]]
+identifier = "deny-planner-suggest-reschedules"
+description = "Denies the planner_suggest_reschedules command without any pre-configured scope."
+commands.deny = ["planner_suggest_reschedules"]

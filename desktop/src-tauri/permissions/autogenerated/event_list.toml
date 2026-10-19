@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-event-list"
+description = "Enables the event_list command without any pre-configured scope."
+commands.allow = ["event_list"]
+
+[[permission]]
+identifier = "deny-event-list"
+description = "Denies the event_list command without any pre-configured scope."
+commands.deny = ["event_list"]

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-assistant-memory"
+description = "Enables the assistant_memory command without any pre-configured scope."
+commands.allow = ["assistant_memory"]
+
+[[permission]]
+identifier = "deny-assistant-memory"
+description = "Denies the assistant_memory command without any pre-configured scope."
+commands.deny = ["assistant_memory"]

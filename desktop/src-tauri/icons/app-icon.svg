@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 256 256">
+  <title>REI sprout</title>
+  <defs>
+    <linearGradient id="forest" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#334d35"/>
+      <stop offset="1" stop-color="#203524"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="url(#forest)"/>
+  <g transform="translate(32 32) scale(8)" fill="none" stroke="#c8ddb7" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 22v-9 M12 16C4 16 3 11 3 6c6 0 9 3 9 10 M12 12c0-7 3-10 9-10 0 6-3 10-9 10"/>
+  </g>
+</svg>

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-hiz-sign-in"
+description = "Enables the hiz_sign_in command without any pre-configured scope."
+commands.allow = ["hiz_sign_in"]
+
+[[permission]]
+identifier = "deny-hiz-sign-in"
+description = "Denies the hiz_sign_in command without any pre-configured scope."
+commands.deny = ["hiz_sign_in"]

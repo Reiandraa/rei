@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-source-analyze-cancel"
+description = "Enables the source_analyze_cancel command without any pre-configured scope."
+commands.allow = ["source_analyze_cancel"]
+
+[[permission]]
+identifier = "deny-source-analyze-cancel"
+description = "Denies the source_analyze_cancel command without any pre-configured scope."
+commands.deny = ["source_analyze_cancel"]

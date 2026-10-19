@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-task-reopen"
+description = "Enables the task_reopen command without any pre-configured scope."
+commands.allow = ["task_reopen"]
+
+[[permission]]
+identifier = "deny-task-reopen"
+description = "Denies the task_reopen command without any pre-configured scope."
+commands.deny = ["task_reopen"]
