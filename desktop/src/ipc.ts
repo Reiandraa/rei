@@ -4,6 +4,9 @@ export const COMMANDS = [
   'app_status',
   'ai_settings',
   'local_ai_setup',
+  'email_discover',
+  'email_configure',
+  'email_sign_in',
   'assistant_summary_get',
   'assistant_summary_refresh',
   'assistant_memory',
@@ -82,6 +85,8 @@ export const isApiModel=(model:string)=>/^api_(openai|anthropic)\//.test(model);
 export const aiName=(model:string)=>model.startsWith('api_openai/')?'OpenAI API':model.startsWith('api_anthropic/')?'Claude API':'Local Ollama';
 export const modelName=(model:string)=>model.replace(/^api_(openai|anthropic)\//,'');
 
+export interface EmailProfile {profile_id:string;kind:'hiz'|'imap'|'google'|'microsoft';email:string;display_name:string;username:string;server:string|null;publisher_ready:boolean;detail:string}
+
 export interface LocalSetup {platform:string;installed:boolean;memory_gb:number|null;recommended_model:string;download:{state:string;model:string;detail:string;completed:number;total:number}}
 
 export interface AppStatus { ipc_version: number; schema_version: number; lock_state: string; device_id: string }
@@ -150,7 +155,7 @@ export interface AnalysisResult { status: string; created: number; already_known
 export interface ApproveEdits { title?: string; due_date?: string | null; due_time?: string | null; date_resolved?: boolean }
 
 export interface ProviderSource { source_kind: 'folder' | 'chat' | 'channel'; source_ref: string; display_name: string; selected: boolean }
-export interface ProviderAccount { account_id: string; provider: 'hiz_imap' | 'teams_graph'; kind: string; display_name: string; state: string;
+export interface ProviderAccount { account_id: string; provider: 'hiz_imap' | 'imap_email' | 'google_mail' | 'microsoft_mail' | 'teams_graph'; kind: string; display_name: string; state: string;
   evidence: 'none' | 'fixture' | 'live'; settings_saved: boolean; sign_in_saved: boolean; authenticated_at: string | null;
   last_read_ok_at: string | null; last_attempt_at: string | null; last_success_at: string | null; last_outcome: string | null;
   last_error: string | null; config: Record<string, unknown>; sources: ProviderSource[]; stored_messages: number; fetch_running: boolean }
@@ -190,6 +195,9 @@ async function call<T>(cmd: CommandName, args?: Record<string, unknown>): Promis
 }
 
 export const api = {
+  emailDiscover:(email:string,preferred?:'google'|'microsoft')=>call<EmailProfile>('email_discover',{req:{email,preferred}}),
+  emailConfigure:(profile_id:string,username?:string)=>call<string>('email_configure',{req:{profile_id,username}}),
+  emailSignIn:(account_id:string,password?:string)=>call<string[]>('email_sign_in',{req:{account_id,password}}),
   localAiSetup:(action:'inspect'|'installer'|'open'|'download'|'cancel'='inspect',model?:string)=>call<LocalSetup>('local_ai_setup',{req:{action,model}}),
   assistantSummaryGet:()=>call<AssistantBrief>('assistant_summary_get'),
   aiSettings:(req:AiRequest={action:'get'})=>call<AiSettings>('ai_settings',{req}),
