@@ -89,8 +89,8 @@ describe('ordinary automatic inbox setup',()=>{
     expect(writes(b)).toHaveLength(0);expect(b.calls.some(c=>c.cmd==='model_list')).toBe(false);
     await user.click(screen.getByRole('tab',{name:'Advanced'}));await screen.findByText('Diagnostics');
     expect(b.calls.some(c=>c.cmd==='model_list')).toBe(false);
-    await user.click(screen.getByText('AI model & time zone'));await screen.findByRole('region',{name:'Local AI'});
-    expect(b.calls.some(c=>c.cmd==='model_list')).toBe(true);expect(writes(b)).toHaveLength(0);
+    await user.click(screen.getByText('Time zone',{exact:true}));await screen.findByRole('region',{name:'Time zone'});
+    expect(b.calls.some(c=>c.cmd==='model_list')).toBe(false);expect(screen.queryByLabelText('Installed model')).toBeNull();expect(writes(b)).toHaveLength(0);
   });
 });
 

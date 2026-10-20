@@ -2,7 +2,7 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { EmailSetup } from '../../../src/screens/EmailSetup';
-import { setTransport, type EmailProfile } from '../../../src/ipc';
+import { setTransport, type EmailProfile, type ProviderAccount } from '../../../src/ipc';
 afterEach(()=>{cleanup();setTransport(null);});
 function fixture(kind:EmailProfile['kind']='imap',ready=true){
  const calls:{cmd:string;req:Record<string,unknown>}[]=[];
@@ -59,4 +59,16 @@ it('cannot start discovery or sign-in while secure credential storage is unavail
  expect(screen.getByRole('button',{name:'Connect email'})).toBeDisabled();
  expect(screen.getByRole('button',{name:'Continue with Google'})).toBeDisabled();
  expect(be.calls).toHaveLength(0);
+});
+
+it('can cancel browser sign-in again for an existing account without disconnecting it',async()=>{
+ const calls:string[]=[];let rejectLogin:(e:unknown)=>void=()=>{};
+ setTransport(async(cmd)=>{calls.push(cmd);if(cmd==='email_sign_in')return new Promise((_,reject)=>{rejectLogin=reject;});if(cmd==='connection_fetch_cancel'){rejectLogin({code:'Cancelled',message:'Sign-in cancelled'});return true;}throw new Error('Unexpected side effect '+cmd);});
+ const account:ProviderAccount={account_id:'existing-google',provider:'google_mail',kind:'email',display_name:'Google',state:'expired',evidence:'fixture',settings_saved:true,sign_in_saved:true,authenticated_at:null,last_read_ok_at:null,last_attempt_at:null,last_success_at:null,last_outcome:null,last_error:null,config:{email:'owner@example.org'},sources:[],stored_messages:0,fetch_running:false};
+ const user=userEvent.setup();render(<EmailSetup account={account} onHiz={vi.fn()}/>);
+ await user.click(screen.getByRole('button',{name:'Sign in again in browser'}));
+ await user.click(await screen.findByRole('button',{name:'Cancel connection'}));
+ expect(await screen.findByRole('alert')).toHaveTextContent('Sign-in cancelled');
+ expect(screen.getByRole('button',{name:'Sign in again in browser'})).toBeEnabled();
+ expect(calls).toEqual(['email_sign_in','connection_fetch_cancel']);
 });
