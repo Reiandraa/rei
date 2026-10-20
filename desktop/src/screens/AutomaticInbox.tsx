@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { api, asIpcError, isApiModel, type AutoSettings, type ConnectionsStatus } from '../ipc';
 import { EmailSetup } from './EmailSetup';
+import { DisconnectEmail } from '../components/DisconnectEmail';
 
 const when = (s: string | null) => s ? new Date(s).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : 'not checked yet';
 export function AutomaticInbox({ onAdvanced }: { onAdvanced?: () => void }) {
@@ -59,6 +60,11 @@ export function AutomaticInbox({ onAdvanced }: { onAdvanced?: () => void }) {
     } catch(e) { setError(asIpcError(e).message); }
     finally { await load(); setBusy(false); }
   }
+  async function disconnected() {
+    setSetupId(null);setProviderChosen(false);setPassword('');setUsername('');setError(null);
+    setNotice('Email disconnected. Your messages and tasks are kept.');
+    window.dispatchEvent(new Event('rei-assistant-changed'));await load();
+  }
   const problem = data?.assistant.worker_state;
   return <section className="card automatic-inbox" aria-label="Automatic inbox">
     <span className="overline">Your university, in one place</span><h2>Automatic inbox</h2>
@@ -73,7 +79,7 @@ export function AutomaticInbox({ onAdvanced }: { onAdvanced?: () => void }) {
         <p className="muted">New connections start with the latest 50 Inbox messages. Existing folder choices are kept. Nothing is marked read or deleted.</p>
         <button className="primary" type="submit" disabled={!username.trim() || !password}>{busy ? 'Connecting…' : account ? 'Sign in and resume' : 'Connect and start'}</button>
       </fieldset></form> : <>
-        <div className="connection-summary"><span className="connection-dot" /><div><strong>Email</strong><small>{savedName || 'Saved sign-in'} · {account.evidence === 'fixture' ? 'Synthetic test connection only' : 'Sign-in saved securely'}</small></div><span className="connection-state">{on ? 'Automatic' : 'Paused'}</span></div>
+        <div className="connection-summary"><span className="connection-dot" /><div><strong>Email</strong><small>{savedName || 'Saved sign-in'} · {account.evidence === 'fixture' ? 'Synthetic test connection only' : 'Sign-in saved securely'}</small></div><span className="connection-state">{on ? 'Automatic' : 'Paused'}</span><DisconnectEmail key={account.account_id} accountId={account.account_id} disabled={busy || account.fetch_running} onDisconnected={disconnected}/></div>
         <p className="muted">{account.fetch_running ? 'Checking for new messages…' : `Last successful check: ${when(account.last_read_ok_at)}`} · {account.stored_messages} stored</p>
         {account.last_error && <p role="alert">{account.last_error} {on && ['degraded'].includes(account.state) && 'Your sign-in is kept; REI will retry automatically.'}</p>}
         {on && problem === 'offline' && <p role="status">Email stays connected. {isApiModel(data.assistant.model)?<>{data.assistant.worker_detail} <a href="#/settings?tab=ai">Open AI settings →</a></>:'Open Ollama on this computer; REI retries local reading automatically.'}</p>}
@@ -83,6 +89,7 @@ export function AutomaticInbox({ onAdvanced }: { onAdvanced?: () => void }) {
           {on && ['offline','model_missing','error'].includes(problem ?? '') && <button disabled={busy} onClick={()=>void control(true,true)}>Try again</button>}
           <a className="button" href="#/today">Open daily review →</a></div>
       </>}
+      {needsLogin && account?.sign_in_saved && <DisconnectEmail key={account.account_id} accountId={account.account_id} disabled={busy || account.fetch_running} onDisconnected={disconnected}/>}
       <p className="connection-help">Checks your connected, selected sources every {data.sources.polling.interval_minutes} minutes while REI is open and this computer is awake. Your selected AI reads new and changed messages automatically. Tasks wait for your approval; routine messages stay available in Messages.</p>
 
     </>}
