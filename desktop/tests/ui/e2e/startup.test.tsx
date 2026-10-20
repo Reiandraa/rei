@@ -31,7 +31,7 @@ it('opens the planner with a useful notice when Ollama is not running, and allow
   render(<Startup><main>Saved planner</main></Startup>);
   expect(await screen.findByText('Saved planner')).toBeInTheDocument();
   expect(screen.getByRole('status')).toHaveTextContent('open Ollama');
-  expect(screen.getByRole('link', {name: 'Open Settings'})).toHaveAttribute('href', '#/settings');
+  expect(screen.getByRole('link', {name: 'Set up AI'})).toHaveAttribute('href', '#/settings?tab=ai');
   fireEvent.click(screen.getByRole('button', {name: 'Dismiss startup notice'}));
   expect(screen.queryByRole('status')).toBeNull();
 });

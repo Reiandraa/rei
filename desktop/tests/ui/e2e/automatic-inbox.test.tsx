@@ -33,6 +33,7 @@ const writes=(b:ReturnType<typeof backend>)=>b.calls.filter(c=>['hiz_configure',
 describe('ordinary automatic inbox setup',()=>{
   it('connects with one form, activates the whole pipeline and keeps the sign-in after remount',async()=>{
     const b=backend(false);setTransport(b.transport);const user=userEvent.setup();const view=render(<AutomaticInbox/>);
+    await user.click(await screen.findByRole('button',{name:'I already have a HIZ sign-in ID'}));
     await user.type(await screen.findByLabelText('University ID'),'fixture-student');await user.type(screen.getByLabelText('Password'),'SYNTHETIC-pw');
     await user.click(screen.getByRole('button',{name:'Connect and start'}));
     await screen.findByRole('button',{name:'Pause automatic inbox'});
@@ -56,6 +57,7 @@ describe('ordinary automatic inbox setup',()=>{
   });
   it('clears a rejected password, allows fixing the ID and reuses the partially configured account',async()=>{
     const b=backend(false);b.state.loginFails=true;setTransport(b.transport);const user=userEvent.setup();render(<AutomaticInbox/>);
+    await user.click(await screen.findByRole('button',{name:'I already have a HIZ sign-in ID'}));
     await user.type(await screen.findByLabelText('University ID'),'wrong-id');await user.type(screen.getByLabelText('Password'),'SYNTHETIC-wrong');
     await user.click(screen.getByRole('button',{name:'Connect and start'}));
     expect(await screen.findByRole('alert')).toHaveTextContent('Synthetic sign-in rejected');expect(screen.getByLabelText('Password')).toHaveValue('');
@@ -66,6 +68,7 @@ describe('ordinary automatic inbox setup',()=>{
   });
   it('keeps saved credentials if activation fails and reports incomplete setup',async()=>{
     const b=backend(false);b.state.activationFails=true;setTransport(b.transport);const user=userEvent.setup();render(<AutomaticInbox/>);
+    await user.click(await screen.findByRole('button',{name:'I already have a HIZ sign-in ID'}));
     await user.type(await screen.findByLabelText('University ID'),'fixture-student');await user.type(screen.getByLabelText('Password'),'SYNTHETIC-pw');await user.click(screen.getByRole('button',{name:'Connect and start'}));
     expect(await screen.findByRole('alert')).toHaveTextContent('Inbox was not found');expect(screen.queryByLabelText('Password')).toBeNull();
     expect(screen.getByRole('button',{name:'Start automatic inbox'})).toBeInTheDocument();expect(b.state.account!.sign_in_saved).toBe(true);expect(b.settings.enabled).toBe(false);
