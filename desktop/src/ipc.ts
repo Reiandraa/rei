@@ -3,6 +3,7 @@
 export const COMMANDS = [
   'app_status',
   'ai_settings',
+  'local_ai_setup',
   'assistant_summary_get',
   'assistant_summary_refresh',
   'assistant_memory',
@@ -80,6 +81,8 @@ export interface AiRequest {action:'get'|'save_key'|'test'|'use_api'|'use_local'
 export const isApiModel=(model:string)=>/^api_(openai|anthropic)\//.test(model);
 export const aiName=(model:string)=>model.startsWith('api_openai/')?'OpenAI API':model.startsWith('api_anthropic/')?'Claude API':'Local Ollama';
 export const modelName=(model:string)=>model.replace(/^api_(openai|anthropic)\//,'');
+
+export interface LocalSetup {platform:string;installed:boolean;memory_gb:number|null;recommended_model:string;download:{state:string;model:string;detail:string;completed:number;total:number}}
 
 export interface AppStatus { ipc_version: number; schema_version: number; lock_state: string; device_id: string }
 export interface Health { database_ok: boolean; schema_version: number }
@@ -187,6 +190,7 @@ async function call<T>(cmd: CommandName, args?: Record<string, unknown>): Promis
 }
 
 export const api = {
+  localAiSetup:(action:'inspect'|'installer'|'open'|'download'|'cancel'='inspect',model?:string)=>call<LocalSetup>('local_ai_setup',{req:{action,model}}),
   assistantSummaryGet:()=>call<AssistantBrief>('assistant_summary_get'),
   aiSettings:(req:AiRequest={action:'get'})=>call<AiSettings>('ai_settings',{req}),
   assistantSummaryRefresh:()=>call<AssistantBrief>('assistant_summary_refresh'),
