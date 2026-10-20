@@ -77,11 +77,16 @@ For the standalone Windows preview with the earlier preview profile identifier:
 npm run tauri -- build --no-bundle --config tauri.windows-preview.conf.json
 ```
 
-For the universal macOS beta (on a Mac with both Rust targets installed):
+For the Apple Silicon setup beta, build on your Mac from this directory:
 
 ```sh
-npm run tauri -- build --target universal-apple-darwin --bundles dmg --config tauri.macos-beta.conf.json
+bash scripts/package-mac-beta.sh
 ```
+
+This creates a verified arm64 app and ZIP without a second architecture or DMG
+packaging pass. Try the new binary before publishing it. A prior Mac beta was
+built and opened by the owner; native acceptance of the new setup is pending.
+See [guided AI and email setup](LOCAL-AI-SETUP.md) for supported actions and limits.
 
 Developer ID signing, notarization, and native platform acceptance remain pending.
 
@@ -125,3 +130,19 @@ It preserves runtime source and synthetic tests from local app commit
 the private development-phase evidence launchers. Dependency versions and
 runtime implementation are unchanged. The earlier Python prototype remains
 at the repository root.
+
+## Guided setup update
+
+Settings -> AI now guides local setup: install/open Ollama, refresh on return,
+choose an installed model or explicitly download one of three suggested models,
+view current-file progress and cancel/retry. RAM-based suggestions are starting
+points, not GPU or summary-quality guarantees. Download never switches providers
+or starts inference. Optional OpenAI/Claude consent remains separate.
+
+New email connections start with an address and recognize supported HIZ domains.
+Other providers are explicitly unavailable; Gmail/Outlook/other universities do
+not become connected by opening webmail. Existing HIZ credentials are preserved.
+
+162 interface tests, lint, frontend build, three new backend unit tests and nine
+integration tests pass. IPC has 60 commands. Native setup acceptance, actual
+model download and new Mac binary validation remain pending.
