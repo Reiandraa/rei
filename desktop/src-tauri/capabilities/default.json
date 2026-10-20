@@ -65,6 +65,9 @@
     "allow-assistant-summary-get",
     "allow-assistant-summary-refresh",
     "allow-assistant-memory",
-    "allow-local-ai-setup"
+    "allow-local-ai-setup",
+    "allow-email-discover",
+    "allow-email-configure",
+    "allow-email-sign-in"
   ]
 }
