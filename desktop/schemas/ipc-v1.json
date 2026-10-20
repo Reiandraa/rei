@@ -970,6 +970,33 @@
         "recommended_model",
         "download"
       ]
+    },
+    "email_discover": {
+      "request": [
+        "req"
+      ],
+      "response": [
+        "profile_id",
+        "kind",
+        "email",
+        "display_name",
+        "username",
+        "server",
+        "publisher_ready",
+        "detail"
+      ]
+    },
+    "email_configure": {
+      "request": [
+        "req"
+      ],
+      "response": "string"
+    },
+    "email_sign_in": {
+      "request": [
+        "req"
+      ],
+      "response": "string[]"
     }
   }
 }
