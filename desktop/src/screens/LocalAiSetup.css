@@ -1,0 +1,20 @@
+.local-ai-setup { max-width: 730px; }
+.local-setup-steps { list-style: none; display: flex; gap: 18px; flex-wrap: wrap; padding: 0; margin: 12px 0 24px; }
+.local-setup-steps li { display: flex; align-items: center; gap: 7px; font-size: calc(11px * var(--text-scale)); color: var(--muted); }
+.local-setup-steps li > span { display: grid; place-items: center; width: 23px; height: 23px; border: 1px solid var(--line); border-radius: 50%; }
+.local-setup-steps .active { color: var(--fg); }
+.local-setup-steps .active > span, .local-setup-steps .complete > span { background: var(--soft); border-color: var(--accent); color: var(--accent); }
+.local-setup-status { font-size: calc(14px * var(--text-scale)); font-weight: 500; margin: 0 0 18px; }
+.local-ai-setup h4 { font-weight: 500; font-size: calc(15px * var(--text-scale)); margin: 0 0 10px; }
+.local-setup-instructions, .local-model-download { padding: 18px 0; border-top: 1px solid var(--line); }
+.local-ai-setup p { max-width: 72ch; font-size: calc(12px * var(--text-scale)); line-height: 1.7; }
+.local-ai-setup .actions { gap: 10px; flex-wrap: wrap; margin: 16px 0; }
+.local-ai-setup button { border: 1px solid var(--line); padding: 9px 13px; }
+.local-ai-setup details { padding: 8px 0; font-size: calc(12px * var(--text-scale)); }
+.local-model-download > .field { margin: 18px 0 10px; }
+.local-download-toggle { margin: 4px 0 18px; }
+.model-download-progress { border-left: 2px solid var(--accent); padding-left: 16px; margin: 20px 0; }
+.model-download-progress strong { font-size: calc(12px * var(--text-scale)); }
+.model-download-progress progress { width: 100%; max-width: 420px; display: block; accent-color: var(--accent); height: 8px; margin: 12px 0; }
+.model-download-progress small { display: block; color: var(--muted); margin: 8px 0 14px; }
+.model-download-progress button { display: block; }

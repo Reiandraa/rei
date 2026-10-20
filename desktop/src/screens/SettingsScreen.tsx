@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, asIpcError, isApiModel, type AppStatus, type Health, type DailySummary, type SettingKey } from '../ipc';
 import { AiSettings } from './AiSettings';
+import { LocalAiSetup } from './LocalAiSetup';
 import { s } from '../strings';
 import { applyTheme, applyAccent, applyTextSize, applyMotion, resolveTheme, resolveAccent, ACCENTS } from '../theme';
 import { AutomaticInbox } from './AutomaticInbox';
@@ -14,6 +15,7 @@ export function LocalAiSettings() {
   const [busy, setBusy] = useState(false);
   const [zone, setZone] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
+  const refreshModels=useCallback(async()=>{try{setList(await api.modelList());}catch{setList({state:'error',models:[]});}},[]);
   useEffect(() => {
     api.autoSettingsGet().then((a) => { setCur(a); setZone(a.date_zone ?? 'Europe/Berlin');if(!isApiModel(a.model))void api.modelList().then(setList,()=>setList({state:'error',models:[]})); }, (e) => setMsg(asIpcError(e).message));
   }, []);
@@ -33,17 +35,7 @@ export function LocalAiSettings() {
       <h2>{cur && isApiModel(cur.model)?'Date and time':'Local AI'}</h2>
       {!cur ? <p role="status">Loading…</p> : (
         <>
-          {!isApiModel(cur.model) && <><p className="muted">Current model: <strong>{cur.model}</strong>. Only models already installed in Ollama on this computer are listed; nothing is downloaded.</p>
-          {list?.state === 'ready' && list.models.length > 0 ? (
-            <label className="field"><span>Installed model</span>
-              <select disabled={busy} value={list.models.includes(cur.model) ? cur.model : ''} onChange={(e) => e.target.value && void save(e.target.value)}>
-                {!list.models.includes(cur.model) && <option value="">— choose —</option>}
-                {list.models.map((m) => <option key={m} value={m}>{m}</option>)}
-              </select>
-            </label>
-          ) : (
-            <p className="muted">{list === null ? 'Checking installed models…' : list.state === 'not_running' ? 'Ollama is not running, so installed models cannot be listed.' : 'No installed models were found.'}</p>
-          )}
+          {!isApiModel(cur.model) && <><LocalAiSetup list={list} current={cur.model} busy={busy} onRefresh={refreshModels} onSave={model=>save(model)}/>
           <details>
             <summary>Advanced: enter an installed model name</summary>
             <label className="field"><span>Model name</span><input value={manual} maxLength={100} onChange={(e) => setManual(e.target.value.trim())} /></label>
