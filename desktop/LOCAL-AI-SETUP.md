@@ -1,8 +1,8 @@
 # Guided AI setup, Windows and macOS
 
 Owner approved shared onboarding after the first Mac beta opened but Ollama was
-not installed there. Keep one source and build separately per platform. HIZ
-remains the current email connector; other campuses are not newly supported.
+not installed there. Keep one source and build separately per platform.
+Email onboarding is described separately in EMAIL-CONNECTIONS.md.
 
 Settings -> AI keeps local Ollama / OpenAI / Claude choices visible. The local
 path distinguishes disconnected service, missing installation, empty model list,
@@ -45,16 +45,9 @@ identifier. The script creates an ad-hoc signed app/ZIP, not notarization. Owner
 must test that new binary and upload its ZIP/checksum; old Mac beta acceptance
 does not validate the new setup implementation.
 
-Email setup starts with an address, locally recognizes only the supported HIZ
-domains, and explains unsupported providers before requesting a password. Known
-HIZ ID shapes may be prefilled but aliases are not guessed. Existing sign-ins
-keep their recovery path and stored credentials. No OAuth browser flow or new
-university provider is claimed.
-
-Validation: 162 interface tests, lint, TypeScript/Vite build, 60-command IPC,
-three backend setup unit tests and nine native integration tests pass. Windows
-optimized build is generated separately. New native installer/open/download
-behavior and Mac packaging script still need device acceptance; no real model
-download, account access or paid API request was used by these checks. The Mac
-script could not be syntax-checked in this Windows sandbox because Git Bash
-was blocked by the host; no security setting was changed.
+Validation: local setup backend tests, synthetic interface tests, lint, production
+frontend build, IPC contract, SQLite migration and connection regression checks
+pass. No real model download, provider login, inbox read or paid API request was
+used by these checks. Native installer/open/download acceptance and Mac packaging
+still need device testing. The Mac script could not be syntax-checked in this
+Windows sandbox because Git Bash was blocked; no security setting was changed.

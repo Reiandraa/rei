@@ -31,8 +31,14 @@ beta would use an ad-hoc signature and would not be notarized.
 
 Today, one-time tasks, repeating schedules, a monthly calendar, message reading,
 source-linked important briefings, and explicit task approval are implemented.
-The current university connector is HIZ IMAP over TLS. Automatic checks and
-analysis run while the desktop app is open and the computer is awake.
+Email setup uses one Connect email screen: email/password for discovered secure
+IMAP, or official Google/Microsoft browser sign-in. HIZ remains supported.
+Google/Microsoft publisher registration is still pending: this source branch
+contains the adapters, but the existing beta1 download does not offer those new
+connections. See [email connections](EMAIL-CONNECTIONS.md) and the
+[publisher activation guide](EMAIL-PUBLISHER-SETUP.md). Not every email service or
+campus permits outside apps. Automatic checks and analysis run while the desktop
+app is open and the computer is awake.
 
 Ollama is the default local AI runtime. Optional Claude and OpenAI adapters use
 your own API key, stored in the operating system's credential store. Enabling
@@ -86,7 +92,7 @@ bash scripts/package-mac-beta.sh
 This creates a verified arm64 app and ZIP without a second architecture or DMG
 packaging pass. Try the new binary before publishing it. A prior Mac beta was
 built and opened by the owner; native acceptance of the new setup is pending.
-See [guided AI and email setup](LOCAL-AI-SETUP.md) for supported actions and limits.
+See [guided local AI setup](LOCAL-AI-SETUP.md) for supported actions and limits.
 
 Developer ID signing, notarization, and native platform acceptance remain pending.
 
