@@ -2787,6 +2787,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "41b1177fdf999d2321d3fb46ff47159d9c1fb9ad66a4879f8c50a0b504615e9b"
 dependencies = [
  "memchr",
+ "serde",
 ]
 
 [[package]]
@@ -2910,6 +2911,7 @@ checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
 name = "rei-os"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "chacha20poly1305",
  "getrandom 0.2.17",
  "hkdf",
@@ -2921,6 +2923,7 @@ dependencies = [
  "keyring",
  "mail-parser",
  "open",
+ "quick-xml",
  "rcgen",
  "rusqlite",
  "rustls",
