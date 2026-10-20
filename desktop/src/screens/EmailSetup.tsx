@@ -57,6 +57,7 @@ export function EmailSetup({onHiz, account, onConnected, storageReady = true}: {
     void connect(preferred);
   }
   const blocked = busy || !storageReady || Boolean(account?.fetch_running);
+  const cancelId = pendingId.current ?? account?.account_id;
   const needsId = isHiz || profile?.kind === 'hiz' || profile?.kind === 'imap' && profile.username !== profile.email;
   return <div className="email-setup">
     <h3>Connect email</h3><p className="muted">Sign in once. REI reads your Inbox without marking messages read or sending email.</p>
@@ -73,7 +74,7 @@ export function EmailSetup({onHiz, account, onConnected, storageReady = true}: {
     <p className="muted email-login-help">Google or Microsoft account? Use its sign-in button. Your password stays on the provider’s official page.</p>
     <details className="email-connection-help"><summary>How your connection works</summary><p className="muted">For other addresses REI finds encrypted email settings automatically. Only the domain is shared with Thunderbird’s provider directory, never your password. Some providers require an app password or restrict outside apps.</p><p className="muted">Sign-in is saved in this computer’s secure storage. REI checks your Inbox while the app is open and the computer is awake.</p></details>
     {account?.fetch_running && !busy && <p role="status">An email operation is already running. <button onClick={()=>void api.fetchCancel(account.account_id).catch(e=>setError(asIpcError(e).message))}>Cancel connection</button></p>}
-    {busy && <div role="status"><p>{phase}</p>{pendingId.current && <button onClick={()=>void api.fetchCancel(pendingId.current!).catch(e=>setError(asIpcError(e).message))}>Cancel connection</button>}</div>}
+    {busy && <div role="status"><p>{phase}</p>{cancelId && <button onClick={()=>void api.fetchCancel(cancelId).catch(e=>setError(asIpcError(e).message))}>Cancel connection</button>}</div>}
     {!busy && phase.startsWith('Email connected') && <p role="status" className="success">{phase}</p>}
     {error && <p role="alert">{error}</p>}
     {!account && <details><summary>My university uses a HIZ sign-in ID</summary><p className="muted">Saarland University HIZ email can use a separate campus ID. Server settings are supplied by REI.</p><button type="button" onClick={()=>{setPassword('');onHiz('');}}>I already have a HIZ sign-in ID</button></details>}

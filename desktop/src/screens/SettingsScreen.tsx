@@ -13,18 +13,17 @@ export function LocalAiSettings() {
   const [cur, setCur] = useState<{ enabled: boolean; paused: boolean; model: string; date_zone?: string } | null>(null);
   const [manual, setManual] = useState('');
   const [busy, setBusy] = useState(false);
-  const [zone, setZone] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
   const refreshModels=useCallback(async()=>{try{setList(await api.modelList());}catch{setList({state:'error',models:[]});}},[]);
   useEffect(() => {
-    api.autoSettingsGet().then((a) => { setCur(a); setZone(a.date_zone ?? 'Europe/Berlin');if(!isApiModel(a.model))void api.modelList().then(setList,()=>setList({state:'error',models:[]})); }, (e) => setMsg(asIpcError(e).message));
+    api.autoSettingsGet().then((a) => { setCur(a);if(!isApiModel(a.model))void api.modelList().then(setList,()=>setList({state:'error',models:[]})); }, (e) => setMsg(asIpcError(e).message));
   }, []);
-  async function save(model: string | undefined, z?: string) {
+  async function save(model: string) {
     if (!cur || busy) return;
     setBusy(true);
     try {
       const fresh = await api.autoSettingsGet();
-      const a = await api.autoSettingsSet(fresh.enabled, fresh.paused, model ?? fresh.model, z);
+      const a = await api.autoSettingsSet(fresh.enabled, fresh.paused, model);
       setCur(a);
       window.dispatchEvent(new Event('rei-assistant-changed'));
       setMsg(`Saved. Automatic assistance now uses ${a.model}${a.date_zone ? ` and reads dates in ${a.date_zone}` : ''}.`);
@@ -32,7 +31,7 @@ export function LocalAiSettings() {
   }
   return (
     <section className="card" aria-label="Local AI">
-      <h2>{cur && isApiModel(cur.model)?'Date and time':'Local AI'}</h2>
+      <h2>Local AI</h2>
       {!cur ? <p role="status">Loading…</p> : (
         <>
           {!isApiModel(cur.model) && <><LocalAiSetup list={list} current={cur.model} busy={busy} onRefresh={refreshModels} onSave={model=>save(model)}/>
@@ -42,17 +41,37 @@ export function LocalAiSettings() {
             <button disabled={busy || !manual} onClick={() => void save(manual)}>Use this model</button>
           </details>
           </>}
-          <details><summary>Advanced date and time settings</summary>
-          <label className="field"><span>Time zone for “Friday”, “tomorrow” and clock times</span>
-            <input value={zone} maxLength={64} onChange={(e) => setZone(e.target.value.trim())} />
-          </label>
-          <button disabled={busy || !zone || zone === cur.date_zone} onClick={() => void save(undefined, zone)}>Save time zone</button>
-          </details>
         </>
       )}
       {msg && <p role="status">{msg}</p>}
     </section>
   );
+}
+
+export function TimeZoneSettings() {
+  const [zone,setZone]=useState('');
+  const [savedZone,setSavedZone]=useState('');
+  const [ready,setReady]=useState(false);
+  const [busy,setBusy]=useState(false);
+  const [notice,setNotice]=useState('');
+  const [error,setError]=useState('');
+  const load=useCallback(async()=>{try{const value=await api.autoSettingsGet();const z=value.date_zone ?? 'Europe/Berlin';setZone(z);setSavedZone(z);setReady(true);setError('');}catch(e){setError(asIpcError(e).message);}},[]);
+  useEffect(()=>{void load();},[load]);
+  async function save(){
+    if(!ready||busy||!zone||zone===savedZone)return;
+    setBusy(true);setError('');setNotice('');
+    try{
+      // Keep the current provider/model and opt-in even if changed in another tab.
+      const fresh=await api.autoSettingsGet();
+      const updated=await api.autoSettingsSet(fresh.enabled,fresh.paused,fresh.model,zone);
+      const z=updated.date_zone ?? zone;setSavedZone(z);setZone(z);setNotice(`Time zone saved: ${z}.`);
+      window.dispatchEvent(new Event('rei-assistant-changed'));
+    }catch(e){setError(asIpcError(e).message);}finally{setBusy(false);}
+  }
+  return <section aria-label="Time zone"><p className="muted">Used to understand dates such as “Friday” and “tomorrow” in your messages. Existing events keep their saved time zones.</p>
+    {!ready ? <p role="status">Loading time zone…</p> : <><label className="field"><span>Time zone</span><input value={zone} maxLength={64} onChange={e=>setZone(e.target.value.trim())} placeholder="Europe/Berlin" disabled={busy}/></label><button disabled={busy||!zone||zone===savedZone} onClick={()=>void save()}>{busy?'Saving…':'Save time zone'}</button></>}
+    {notice && <p role="status">{notice}</p>}{error && <p role="alert">{error} {!ready && <button onClick={()=>void load()}>Try again</button>}</p>}
+  </section>;
 }
 
 type Preference = {value:string;revision:number};
@@ -82,7 +101,7 @@ export function SettingsScreen() {
   useEffect(()=>{const changed=()=>setTab(settingsTab());window.addEventListener('hashchange',changed);return()=>window.removeEventListener('hashchange',changed);},[]);
   const chooseTab=(value:string)=>{setTab(value);window.history.replaceState(null,'',`#/settings?tab=${value}`);};
   const [emailOpen,setEmailOpen]=useState(false);
-  const [aiOpen,setAiOpen]=useState(false);
+  const [zoneOpen,setZoneOpen]=useState(false);
   const [recoveryOpen,setRecoveryOpen]=useState(false);
   const [error,setError]=useState<string|null>(null);
   const [saved,setSaved]=useState<string|null>(null);
@@ -121,10 +140,10 @@ export function SettingsScreen() {
     </section>
     </>}
     {tab==='sync' && <section className="card"><h2>Sync &amp; backup</h2><p role="status">Sync and backup are not available in this version. Your messages, tasks and preferences stay on this computer.</p><p className="muted">No cloud account or subscription is connected.</p></section>}
-    {tab==='advanced' && <section className="card advanced-settings"><h2>Advanced settings</h2><div className="settings-more"><p className="muted">Optional controls for local AI and troubleshooting.</p>
-      <details className="settings-disclosure" open={aiOpen} onToggle={e=>setAiOpen(e.currentTarget.open)}><summary><strong>AI model &amp; time zone</strong><span>Change the local model or how dates are understood.</span></summary>{aiOpen && <LocalAiSettings/>}</details>
-      <details className="settings-disclosure" open={recoveryOpen} onToggle={e=>setRecoveryOpen(e.currentTarget.open)}><summary><strong>Message recovery</strong><span>Retry reading that stopped, without reconnecting email.</span></summary>{recoveryOpen && <MessageRecovery/>}</details>
-      <details className="settings-disclosure diagnostics"><summary><strong>{s.settings.diagnostics}</strong><span>Technical information, only for troubleshooting.</span></summary><dl><dt>{s.settings.database}</dt><dd>{data.health.database_ok?s.settings.dbOk(data.status.schema_version):s.settings.dbBad}</dd><dt>{s.settings.ipc}</dt><dd>{data.status.ipc_version}</dd><dt>{s.settings.device}</dt><dd>{data.status.device_id}</dd><dt>{s.settings.lock}</dt><dd>{data.status.lock_state}</dd></dl></details>
+    {tab==='advanced' && <section className="card advanced-settings"><h2>Advanced settings</h2><div className="settings-more"><p className="muted">Time zone and troubleshooting. Manage models and API providers in the AI tab.</p>
+      <details className="settings-disclosure" open={zoneOpen} onToggle={e=>setZoneOpen(e.currentTarget.open)}><summary><strong>Time zone</strong><span>Choose how dates and clock times in messages are understood.</span></summary>{zoneOpen && <TimeZoneSettings/>}</details>
+      <details className="settings-disclosure diagnostics"><summary><strong>{s.settings.diagnostics}</strong><span>Technical information and recovery tools, only for troubleshooting.</span></summary><dl><dt>{s.settings.database}</dt><dd>{data.health.database_ok?s.settings.dbOk(data.status.schema_version):s.settings.dbBad}</dd><dt>{s.settings.ipc}</dt><dd>{data.status.ipc_version}</dd><dt>{s.settings.device}</dt><dd>{data.status.device_id}</dd><dt>{s.settings.lock}</dt><dd>{data.status.lock_state}</dd></dl>
+      <details className="settings-disclosure" open={recoveryOpen} onToggle={e=>setRecoveryOpen(e.currentTarget.open)}><summary><strong>Message recovery</strong><span>Retry reading that stopped, without reconnecting email.</span></summary>{recoveryOpen && <MessageRecovery/>}</details></details>
 
     </div></section>}
     </div>
