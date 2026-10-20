@@ -26,15 +26,20 @@ Attachments and remote content are not downloaded for Gmail summaries.
 
 ## Current activation status
 
-The connectors and one-screen flow are implemented and tested with synthetic data.
-The checked-in publisher client IDs are empty: Google/Microsoft sign-in is not yet
-activated or tested with real accounts. The interface explains this without asking
-users for developer settings. The public beta1 download is unchanged.
+The connectors and one-screen flow are tested with synthetic data. Google now has
+an External/Testing publisher registration and native Desktop client. Only listed
+test accounts can try Google sign-in; public verification and native account
+acceptance are not complete. Microsoft publisher configuration is still pending.
+The existing public beta1 download is unchanged.
 
-The publisher must complete EMAIL-PUBLISHER-SETUP.md, rebuild, and validate an actual
-sign-in/fetch/reopen/disconnect on Windows and macOS before announcing availability.
+The publisher must finish EMAIL-PUBLISHER-SETUP.md, rebuild, and validate an actual
+sign-in/fetch/reopen/disconnect on Windows and macOS before general availability.
 These changes do not enable Teams, cloud sync or a shared server mailbox.
 
 Message content stays local when local Ollama is selected. Choosing an optional
 hosted AI provider separately can send relevant message content to that provider,
 subject to the explicit AI settings consent. Email login does not enable an AI API.
+
+Disconnect email is visible beside the account status in Settings -> Connections.
+Its nearby confirmation removes the saved sign-in locally and keeps messages and
+tasks. Optional mail-folder and interval controls remain collapsed in preferences.

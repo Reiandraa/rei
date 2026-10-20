@@ -2,7 +2,11 @@
 
 These steps are performed once by the REI publisher, not by each user. The app's
 Connect email screen contains no developer registration fields. No registration,
-real login or provider verification has been completed by the development checks.
+real login or provider verification is established by the synthetic development checks.
+Google project REI OS (pro-planet-512201-t6), External/Testing branding, Desktop
+client, enabled Gmail API and gmail.readonly scope were configured with owner-approved policy/contact
+consent on 2026-10-20. The owner account is listed for beta testing. Native sign-in
+acceptance, public verification and Microsoft registration remain pending.
 
 ## Google
 

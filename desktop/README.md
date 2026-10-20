@@ -33,9 +33,10 @@ Today, one-time tasks, repeating schedules, a monthly calendar, message reading,
 source-linked important briefings, and explicit task approval are implemented.
 Email setup uses one Connect email screen: email/password for discovered secure
 IMAP, or official Google/Microsoft browser sign-in. HIZ remains supported.
-Google/Microsoft publisher registration is still pending: this source branch
-contains the adapters, but the existing beta1 download does not offer those new
-connections. See [email connections](EMAIL-CONNECTIONS.md) and the
+Google has an External/Testing registration for listed beta testers; native
+sign-in acceptance and public verification remain pending. Microsoft publisher
+registration is still pending. The existing beta1 download does not offer these
+new connections. See [email connections](EMAIL-CONNECTIONS.md) and the
 [publisher activation guide](EMAIL-PUBLISHER-SETUP.md). Not every email service or
 campus permits outside apps. Automatic checks and analysis run while the desktop
 app is open and the computer is awake.
