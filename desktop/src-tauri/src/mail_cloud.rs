@@ -58,11 +58,38 @@ fn client_id(provider: &str) -> Option<&'static str> {
     };
     valid.then_some(value)
 }
+fn google_desktop_credential() -> Option<&'static str> {
+    option_env!("REI_GOOGLE_DESKTOP_CLIENT_SECRET").filter(|v| valid_desktop_credential(v))
+}
+fn valid_desktop_credential(value: &str) -> bool {
+    (16..=256).contains(&value.len())
+        && value
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b"-._~".contains(&b))
+}
 pub fn publisher_ready(provider: &str) -> bool {
-    client_id(provider).is_some()
+    client_id(provider).is_some() && (provider != GOOGLE || google_desktop_credential().is_some())
 }
 fn client(provider: &str) -> PRes<&'static str> {
     client_id(provider).ok_or(ProviderError::NotConfigured("the REI publisher must enable this sign-in provider once; users do not need developer settings"))
+}
+// Google's installed-app reference implementation includes this credential in
+// BOTH the authorization-code and refresh grants, alongside PKCE for the former.
+// This is the publisher's own Desktop registration, never a user's password or
+// a credential borrowed from another email app. Build-only; not sent over IPC.
+fn token_form<'a>(
+    provider: &str,
+    fields: &[(&'a str, &'a str)],
+    desktop_credential: Option<&'a str>,
+) -> PRes<Vec<(&'a str, &'a str)>> {
+    let mut form = fields.to_vec();
+    if provider == GOOGLE {
+        let credential = desktop_credential.filter(|v| valid_desktop_credential(v)).ok_or(
+            ProviderError::NotConfigured("this REI build is missing its Google Desktop app credential. The publisher must rebuild it; you do not need to change your email password or sign in again."),
+        )?;
+        form.push(("client_secret", credential));
+    }
+    Ok(form)
 }
 fn refresh_key(id: &str) -> PRes<VaultKey> {
     VaultKey::new(id, SecretKind::Refresh).map_err(|_| ProviderError::Invalid("account id".into()))
@@ -124,6 +151,51 @@ fn read_json(response: ureq::Response) -> PRes<Value> {
     }
     serde_json::from_slice(&data).map_err(|_| ProviderError::Protocol("invalid email response"))
 }
+// Never expose the provider's free-form response: it can echo authorization
+// codes or credentials. Retain only recognized failure categories for the UI.
+fn token_rejection(provider: &str, status: u16, value: &Value) -> ProviderError {
+    let google = provider == GOOGLE;
+    match value["error"].as_str() {
+        Some("invalid_request")
+            if google
+                && value["error_description"]
+                    .as_str()
+                    .is_some_and(|s| s.to_ascii_lowercase().contains("client_secret")) =>
+        {
+            ProviderError::NotConfigured("Google requires REI's desktop client credential for this app registration. The REI publisher must update the app; changing your password will not help.")
+        }
+        Some("invalid_client" | "unauthorized_client") if google => ProviderError::NotConfigured(
+            "Google rejected REI's app registration during the token exchange (invalid_client). The REI publisher must check its desktop client configuration.",
+        ),
+        Some("invalid_client" | "unauthorized_client") => ProviderError::NotConfigured(
+            "Microsoft rejected REI's app registration during the token exchange. The REI publisher must check its desktop client configuration.",
+        ),
+        Some("invalid_grant") => ProviderError::Protocol(
+            "the browser sign-in code or saved connection was rejected (invalid_grant). Cancel this attempt and start a new browser sign-in from REI.",
+        ),
+        Some("access_denied") => ProviderError::Denied,
+        Some("server_error" | "temporarily_unavailable") => ProviderError::Network,
+        Some("invalid_request") => ProviderError::Protocol(
+            "the provider rejected REI's token request (invalid_request). This needs an app configuration check, not a different email password.",
+        ),
+        _ if status == 401 => ProviderError::NotConfigured(
+            "the provider rejected REI's app credentials during the token exchange (HTTP 401). The publisher must check the app registration.",
+        ),
+        _ => ProviderError::Protocol(
+            "the provider rejected the token exchange after the browser returned (HTTP 400). Its response did not contain a recognized error code.",
+        ),
+    }
+}
+fn token_http_error(provider: &str, error: ureq::Error) -> ProviderError {
+    match error {
+        ureq::Error::Status(status @ (400 | 401), response) => {
+            // Reading a bounded response does not persist its sensitive contents.
+            let value = read_json(response).unwrap_or(Value::Null);
+            token_rejection(provider, status, &value)
+        }
+        other => network_error(other),
+    }
+}
 pub trait CloudTransport {
     fn get(&self, provider: &str, url: &str, token: &Secret) -> PRes<Value>;
     fn token(&self, provider: &str, form: &[(&str, &str)]) -> PRes<Value>;
@@ -156,10 +228,7 @@ impl CloudTransport for Https {
             agent()
                 .post(token_url(provider))
                 .send_form(form)
-                .map_err(|e| match e {
-                    ureq::Error::Status(400 | 401, _) => ProviderError::Auth,
-                    other => network_error(other),
-                })?,
+                .map_err(|e| token_http_error(provider, e))?,
         )
     }
 }
@@ -270,12 +339,12 @@ fn callback_query(line: &str, state: &str) -> PRes<String> {
         return Err(ProviderError::Denied);
     }
     if get("error").is_some() {
-        return Err(ProviderError::Auth);
+        return Err(ProviderError::Protocol("the browser returned an OAuth error instead of a sign-in code. The mailbox has not been connected."));
     }
     get("code")
         .filter(|s| !s.is_empty() && s.len() < 4096)
         .map(str::to_string)
-        .ok_or(ProviderError::Auth)
+        .ok_or(ProviderError::Protocol("the browser callback did not contain a sign-in code. The mailbox has not been connected."))
 }
 fn await_code(listener: TcpListener, state: &str, cancel: &AtomicBool) -> PRes<String> {
     listener
@@ -354,7 +423,9 @@ fn identity(provider: &str, value: &Value, expected: &str) -> PRes<(String, Stri
             .filter(|s| !s.is_empty())
             .or_else(|| value["userPrincipalName"].as_str())
     }
-    .ok_or(ProviderError::Auth)?;
+    .ok_or(ProviderError::Protocol(
+        "the provider's mailbox profile did not contain an email address",
+    ))?;
     crate::email_discovery::parts(email)?;
     let matches = expected.is_empty()
         || email.eq_ignore_ascii_case(expected)
@@ -368,7 +439,12 @@ fn identity(provider: &str, value: &Value, expected: &str) -> PRes<(String, Stri
     let subject = if provider == GOOGLE {
         email.to_ascii_lowercase()
     } else {
-        value["id"].as_str().ok_or(ProviderError::Auth)?.into()
+        value["id"]
+            .as_str()
+            .ok_or(ProviderError::Protocol(
+                "the provider's mailbox profile did not contain an account identifier",
+            ))?
+            .into()
     };
     Ok((email.into(), subject))
 }
@@ -399,6 +475,9 @@ pub fn sign_in(
         (p, cfg)
     };
     let client = client(&provider)?;
+    // Validate before opening the browser, so a broken publisher build cannot
+    // make the owner repeat a sign-in that has no chance of completing.
+    token_form(&provider, &[], google_desktop_credential())?;
     let listener = TcpListener::bind("127.0.0.1:0").map_err(|_| ProviderError::Network)?;
     let redirect = format!(
         "http://{}:{}/callback",
@@ -419,7 +498,7 @@ pub fn sign_in(
         &provider, client, email, &redirect, &state, &verifier,
     )?)?;
     let code = await_code(listener, &state, cancel)?;
-    let tokens = Https.token(
+    let form = token_form(
         &provider,
         &[
             ("client_id", client),
@@ -428,15 +507,29 @@ pub fn sign_in(
             ("redirect_uri", &redirect),
             ("grant_type", "authorization_code"),
         ],
+        google_desktop_credential(),
     )?;
+    let tokens = Https.token(&provider, &form)?;
     if cancel.load(Ordering::SeqCst) {
         return Err(ProviderError::Cancelled);
     }
-    let token = access(&tokens, &provider)?;
-    let who = Https.get(&provider, &profile_request(&provider), &token)?;
+    let token = access(&tokens, &provider).map_err(|e| match e {
+        ProviderError::Auth => ProviderError::Protocol(
+            "the provider did not issue a usable access token after browser sign-in",
+        ),
+        other => other,
+    })?;
+    let who = Https
+        .get(&provider, &profile_request(&provider), &token)
+        .map_err(|e| match e {
+            ProviderError::Auth => ProviderError::Protocol(
+                "the provider rejected the new access token while checking the signed-in mailbox (HTTP 401)",
+            ),
+            other => other,
+        })?;
     let (email, subject) = identity(&provider, &who, email)?;
     if cfg["subject"].as_str().is_some_and(|s| s != subject) {
-        return Err(ProviderError::Auth);
+        return Err(ProviderError::Invalid("the signed-in mailbox differs from the account previously connected here; disconnect this account before choosing another mailbox".into()));
     }
     let refresh = tokens["refresh_token"]
         .as_str()
@@ -479,14 +572,16 @@ fn token_for(
         .get(&refresh_key(id)?)
         .map_err(|_| ProviderError::SecretMissing)?;
     let refresh = std::str::from_utf8(secret.expose()).map_err(|_| ProviderError::Auth)?;
-    let tokens = http.token(
+    let form = token_form(
         provider,
         &[
             ("client_id", client(provider)?),
             ("refresh_token", refresh),
             ("grant_type", "refresh_token"),
         ],
+        google_desktop_credential(),
     )?;
+    let tokens = http.token(provider, &form)?;
     let token = access(&tokens, provider)?;
     let who = http.get(provider, &profile_request(provider), &token)?;
     let (_, subject) = identity(provider, &who, cfg["email"].as_str().unwrap_or(""))?;
@@ -848,6 +943,69 @@ pub fn disconnect(store: &dyn SecretStore, id: &str) -> PRes<()> {
 mod tests {
     use super::*;
     #[test]
+    fn desktop_credential_is_used_for_both_google_grants_and_never_for_microsoft() {
+        let secret = "SYNTHETIC-DESKTOP-CREDENTIAL";
+        for grant in ["authorization_code", "refresh_token"] {
+            let fields = [
+                ("client_id", "synthetic-client"),
+                ("grant_type", grant),
+                ("code_verifier", "synthetic-pkce"),
+            ];
+            let form = token_form(GOOGLE, &fields, Some(secret)).unwrap();
+            assert!(form.contains(&("client_secret", secret)));
+            assert!(form.contains(&("code_verifier", "synthetic-pkce")));
+            assert!(form.contains(&("grant_type", grant)));
+            assert!(matches!(
+                token_form(GOOGLE, &fields, None),
+                Err(ProviderError::NotConfigured(_))
+            ));
+            assert!(token_form(GOOGLE, &fields, Some("bad\ncredential")).is_err());
+            assert_eq!(
+                token_form(MICROSOFT, &fields, Some(secret)).unwrap(),
+                fields
+            );
+        }
+    }
+    #[test]
+    fn token_errors_distinguish_publisher_setup_from_expired_codes_without_echoing_secrets() {
+        let missing_secret = json!({"error":"invalid_request","error_description":"client_secret is missing; secret=SYNTHETIC-DO-NOT-ECHO"});
+        let error = token_rejection(GOOGLE, 400, &missing_secret);
+        assert!(matches!(error, ProviderError::NotConfigured(_)));
+        assert!(error.to_string().contains("desktop client credential"));
+        assert!(!error.to_string().contains("SYNTHETIC-DO-NOT-ECHO"));
+        assert!(matches!(
+            token_rejection(GOOGLE, 401, &json!({"error":"invalid_client"})),
+            ProviderError::NotConfigured(_)
+        ));
+        assert!(matches!(
+            token_rejection(GOOGLE, 400, &json!({"error":"invalid_grant"})),
+            ProviderError::Protocol(_)
+        ));
+        let unknown = token_rejection(
+            GOOGLE,
+            400,
+            &json!({"error":"SYNTHETIC-DO-NOT-ECHO","error_description":"SYNTHETIC-DO-NOT-ECHO"}),
+        );
+        assert!(!unknown.to_string().contains("SYNTHETIC-DO-NOT-ECHO"));
+        assert_eq!(
+            token_rejection(GOOGLE, 400, &json!({"error":"access_denied"})),
+            ProviderError::Denied
+        );
+    }
+    #[test]
+    fn http_token_rejections_are_bounded_parsed_and_sanitized() {
+        let response = ureq::Response::new(400, "Bad Request", r#"{"error":"invalid_request","error_description":"client_secret is missing; synthetic_private_code"}"#).unwrap();
+        let error = token_http_error(GOOGLE, ureq::Error::Status(400, response));
+        assert!(error.to_string().contains("desktop client credential"));
+        assert!(!error.to_string().contains("synthetic_private_code"));
+        let malformed = ureq::Response::new(400, "Bad Request", "synthetic_private_code").unwrap();
+        assert!(
+            !token_http_error(GOOGLE, ureq::Error::Status(400, malformed))
+                .to_string()
+                .contains("synthetic_private_code")
+        );
+    }
+    #[test]
     fn callback_binds_state_and_rejects_duplicates_before_denial() {
         assert_eq!(
             callback_query("GET /callback?state=ok&code=abc HTTP/1.1", "ok").unwrap(),
@@ -881,6 +1039,54 @@ mod tests {
         assert_eq!(q["scope"], GOOGLE_SCOPE);
         assert_eq!(q["code_challenge"], oauth::pkce_challenge("verifier"));
         assert_eq!(q["code_challenge_method"], "S256");
+    }
+    #[test]
+    fn microsoft_desktop_flow_uses_common_graph_read_permissions_and_no_secret() {
+        let url = authorize_url(
+            MICROSOFT,
+            "11111111-1111-4111-8111-111111111111",
+            "synthetic@example.org",
+            "http://localhost:49152/callback",
+            "synthetic-state",
+            "synthetic-verifier",
+        )
+        .unwrap();
+        let url = url::Url::parse(&url).unwrap();
+        assert_eq!(url.host_str(), Some("login.microsoftonline.com"));
+        assert_eq!(url.path(), "/common/oauth2/v2.0/authorize");
+        let query: std::collections::HashMap<_, _> = url.query_pairs().into_owned().collect();
+        assert_eq!(query["scope"], "offline_access User.Read Mail.Read");
+        assert_eq!(query["redirect_uri"], "http://localhost:49152/callback");
+        assert_eq!(
+            query["code_challenge"],
+            oauth::pkce_challenge("synthetic-verifier")
+        );
+        assert!(!query.contains_key("client_secret"));
+        assert_eq!(
+            token_url(MICROSOFT),
+            "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+        );
+        assert_eq!(
+            profile_request(MICROSOFT),
+            "https://graph.microsoft.com/v1.0/me?$select=id,mail,userPrincipalName"
+        );
+    }
+    #[test]
+    fn microsoft_identity_accepts_login_upn_but_still_requires_read_access() {
+        let profile = json!({"id":"synthetic-object","mail":"primary@example.org","userPrincipalName":"login@example.org"});
+        let (email, subject) = identity(MICROSOFT, &profile, "login@example.org").unwrap();
+        assert_eq!(email, "primary@example.org");
+        assert_eq!(subject, "synthetic-object");
+        assert!(identity(MICROSOFT, &profile, "other@example.org").is_err());
+        assert!(access(&json!({"access_token":"synthetic","scope":"User.Read https://graph.microsoft.com/Mail.Read"}), MICROSOFT).is_ok());
+        assert_eq!(
+            access(
+                &json!({"access_token":"synthetic","scope":"User.Read Mail.Send"}),
+                MICROSOFT
+            )
+            .err(),
+            Some(ProviderError::Forbidden)
+        );
     }
     #[test]
     fn bearer_tokens_cannot_follow_other_origins_or_paths() {
