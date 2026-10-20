@@ -205,7 +205,8 @@ fn ipc_schema_matches_rust_commands() {
             assert!(
                 matches!(
                     module,
-                    "commands"
+                    "local_setup"
+                        | "commands"
                         | "ai"
                         | "inbox"
                         | "connections"
