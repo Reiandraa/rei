@@ -13,3 +13,11 @@ src-tauri/gen/
 *.pfx
 *.log
 .DS_Store
+
+client_secret*.json
+
+credentials*.json
+
+email-publisher.private.json
+
+beta-artifacts/

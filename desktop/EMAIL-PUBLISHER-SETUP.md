@@ -5,8 +5,11 @@ Connect email screen contains no developer registration fields. No registration,
 real login or provider verification is established by the synthetic development checks.
 Google project REI OS (pro-planet-512201-t6), External/Testing branding, Desktop
 client, enabled Gmail API and gmail.readonly scope were configured with owner-approved policy/contact
-consent on 2026-10-20. The owner account is listed for beta testing. Native sign-in
-acceptance, public verification and Microsoft registration remain pending.
+consent on 2026-10-20. The owner account is listed for beta testing. The owner reports
+successful Google and Microsoft sign-in on Windows. Public Google verification,
+other-account/campus consent and native Mac acceptance remain pending. The owned
+Microsoft public desktop registration is configured with delegated User.Read and
+Mail.Read only. No Azure paid upgrade or billable resource was created.
 
 ## Google
 
@@ -19,7 +22,17 @@ acceptance, public verification and Microsoft registration remain pending.
    callback `http://127.0.0.1:<port>/callback`.
 4. Put its public client ID into `email-publisher.json` -> `google_client_id`.
    Do not put passwords, refresh tokens or web client secrets into this repository.
-   The native flow uses the documented optional-client-secret PKCE exchange.
+   Keep the downloaded **Desktop** credential outside this repository. Google's
+   installed-app library sends its `client_secret` during both code exchange and
+   token refresh, in addition to PKCE for code exchange. REI now follows that
+   behavior. Build Windows with:
+   `powershell -File scripts/build-google-windows.ps1 -CredentialsPath <downloaded-Desktop-JSON>`.
+   The script validates the client ID and injects `REI_GOOGLE_DESKTOP_CLIENT_SECRET`
+   into the build process only. It does not print credentials or upload a release.
+   A build without the credential refuses Google sign-in before opening a browser.
+   Native applications cannot keep an embedded app credential confidential; PKCE,
+   state, exact provider destinations and OS-vault user refresh tokens remain
+   necessary. Never reuse another application's client ID or secret.
 5. In testing mode, add the intended testers. Public availability of Gmail read-only
    access requires the relevant Google verification process; testing access is not
    a public release. Review testing-mode refresh-token expiry before promising
@@ -51,7 +64,12 @@ Never share actual passwords, tokens or mailbox dumps in chat or source control.
 ## Build and verify before enabling the download
 
 Build Windows from the same published source and build Apple Silicon locally on
-Mac using `bash scripts/package-mac-beta.sh`. No Mac CI is required. Keep the existing
+Mac using `bash scripts/package-mac-beta.sh /private/path/to/Google-Desktop.json`.
+The owner must transfer their own Desktop JSON privately to their Mac; do not
+upload it to GitHub, chat or the website. The wrapper validates it before building,
+injects the credential into the native build environment only, checks the app's
+arm64 architecture and ad-hoc signature, and packages only the app and checksum.
+No Mac CI is required. Keep the existing
 preview profile identifier. Test with a consenting test mailbox: cancel sign-in,
 complete sign-in, reject a mismatched account, read Inbox, receive another message,
 restart and fetch using saved sign-in, disconnect, and confirm future access stops.

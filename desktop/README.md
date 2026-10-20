@@ -1,103 +1,76 @@
-# REI OS desktop preview
+# REI OS desktop beta
 
-REI brings university email, important updates, proposed tasks, repeating
-classes, and a daily planner together in a local-first desktop app.
+A local-first study planner: email, important updates, proposed tasks, repeating
+classes and your day in one place.
 
 - Product: https://reiandraa.com/projects/rei/
-- Interactive sample-data demo: https://reiandraa.com/projects/rei/demo/
-
-## Beta downloads
-
-Open the Windows x64 `REI OS.exe` preview directly. Its frontend is embedded;
-no command prompt, development server, Node.js, or Rust installation is needed
-to run it. Windows WebView2 must be present. Ollama and a local model are needed
-only for local AI; a configured hosted API is the other option.
-
-The app opens with the REI sprout logo and real workspace, appearance, and AI
-availability checks. Unavailable Ollama does not prevent using the planner.
-This executable is unsigned and is not an installer. Windows preview binaries
-are distributed in the repository's Releases section.
-
-The Windows preview build retains the earlier `dev.rei.os.preview` profile
-identifier. Existing users should close their old preview before opening it.
-No private profile or credentials are included in source or binary downloads.
-
-A macOS universal build configuration is included for development, but a Mac
-download is not available in this Windows beta. Mac distribution validation
-is incomplete. Its optional workflow uses no Apple credentials; any future
-beta would use an ad-hoc signature and would not be notarized.
+- Browser demo with sample data: https://reiandraa.com/projects/rei/demo/
+- Versioned beta downloads: https://github.com/Reiandraa/rei/releases
 
 ## Current scope
 
-Today, one-time tasks, repeating schedules, a monthly calendar, message reading,
-source-linked important briefings, and explicit task approval are implemented.
-Email setup uses one Connect email screen: email/password for discovered secure
-IMAP, or official Google/Microsoft browser sign-in. HIZ remains supported.
-Google has an External/Testing registration for listed beta testers; native
-sign-in acceptance and public verification remain pending. Microsoft publisher
-registration is still pending. The existing beta1 download does not offer these
-new connections. See [email connections](EMAIL-CONNECTIONS.md) and the
-[publisher activation guide](EMAIL-PUBLISHER-SETUP.md). Not every email service or
-campus permits outside apps. Automatic checks and analysis run while the desktop
-app is open and the computer is awake.
+Today, one-time tasks, repeating schedules, a month calendar, message reading,
+source-linked briefings and explicit task approval are implemented. Today shows
+up to three important updates and links to all remaining updates in Assistant.
+The AI never approves tasks merely by producing a summary.
 
-Ollama is the default local AI runtime. Optional Claude and OpenAI adapters use
-your own API key, stored in the operating system's credential store. Enabling
-an API requires explicit provider/model consent: relevant message content is
-sent to that provider and its account may be charged. A request-count limit is
-provided; it is not a guaranteed dollar cap.
+Connect email uses one screen: secure email/password discovery or official
+Google/Microsoft browser sign-in. HIZ remains supported. The owner reports
+successful Google and Microsoft sign-in on Windows. Google remains External/Testing
+for publisher-approved testers; public verification is not complete. Microsoft
+organizations may require administrator consent or a verified publisher. Not
+every university or email provider permits outside applications.
 
-This is a development preview, not a finished or signed release. Teams
-connectors and other experimental modules remain in the source, but live
-Teams access, cloud sync, and a full conversational assistant with searchable
-memory are not offered as working product features. Downloads are beta previews; native acceptance testing is still in progress.
+Automatic checks and reading run while REI is open and the computer is awake.
+Use local Ollama and an installed model, or explicitly enable a supported hosted
+AI with your own API key. Hosted AI transmits relevant content to the chosen
+provider and may incur charges there; the request limit is not a dollar cap.
+AI quality and speed depend on the model. Teams and cloud sync are not enabled
+product features in this beta.
 
-## Run from source
+## Builds
 
-Install Node.js 20.19+ (or 22.12+), npm, stable Rust, and the prerequisites for
-Tauri 2 on your operating system. Windows requires Microsoft C++ Build Tools
-and WebView2; macOS requires Xcode command-line tools. Ollama is optional when
-using a configured hosted API instead. Development does not require Claude
-Code or a paid development launcher.
+Windows is an unsigned standalone x64 GUI executable with embedded frontend and
+sprout icon, using WebView2. No Node.js, Rust or command prompt is needed to run it.
+The existing dev.rei.os.preview profile is retained; close older REI windows first.
+No user profile, email password, API key or refresh token is shipped in downloads.
+Native apps contain the publisher Desktop registration; its private JSON remains
+outside source control.
 
-From this `desktop` directory:
+Apple Silicon Mac builds run locally on the owner's MacBook. They are ad-hoc
+signed and not Apple-notarized. A Mac download is published only after that build
+is opened and tested. No Mac CI is used.
+
+Install Node.js 20.19+ or 22.12+, npm, Rust stable and Tauri 2 prerequisites for
+your OS. macOS needs Xcode command-line tools; Windows needs Microsoft C++ Build
+Tools and WebView2. Development does not require Claude Code or paid launchers.
+
+For development from this desktop folder:
 
 ```sh
 npm ci
 npm run tauri -- dev
 ```
 
-The frontend runs on port 1420. `npm run dev` alone is only the web frontend;
-the native Rust backend is needed for real accounts and saved data. Configure
-email and AI locally in Settings. Never put passwords, API keys, or a copied
-application profile into the repository.
+For the owner Google-enabled Windows build:
 
-To create a native build for your current platform:
-
-```sh
-npm run tauri -- build
+```powershell
+powershell -File scripts/build-google-windows.ps1 -CredentialsPath <private-Desktop-JSON>
 ```
 
-For the standalone Windows preview with the earlier preview profile identifier:
+For the owner Apple Silicon beta:
 
 ```sh
-npm run tauri -- build --no-bundle --config tauri.windows-preview.conf.json
+bash scripts/package-mac-beta.sh "$HOME/Downloads/REI-Google-Desktop.json"
 ```
 
-For the Apple Silicon setup beta, build on your Mac from this directory:
+The publisher must privately supply their own downloaded Google Desktop JSON,
+matching email-publisher.json. The Mac wrapper validates it before running checks,
+then builds the arm64 app and packages only the app and checksum. No private JSON
+is included in that ZIP. A native build without the Desktop credential refuses
+Google sign-in before opening a browser. Do not use another app's credentials.
 
-```sh
-bash scripts/package-mac-beta.sh
-```
-
-This creates a verified arm64 app and ZIP without a second architecture or DMG
-packaging pass. Try the new binary before publishing it. A prior Mac beta was
-built and opened by the owner; native acceptance of the new setup is pending.
-See [guided local AI setup](LOCAL-AI-SETUP.md) for supported actions and limits.
-
-Developer ID signing, notarization, and native platform acceptance remain pending.
-
-## Checks
+## Checks and limits
 
 ```sh
 npm run lint
@@ -105,51 +78,23 @@ npm run build
 npm run test:unit
 npm run test:e2e
 node scripts/tools/check-ipc-schema.mjs
-cargo fmt --manifest-path src-tauri/Cargo.toml --check
 node scripts/tools/prepare-test-fixtures.mjs
-cargo test --manifest-path src-tauri/Cargo.toml --locked
+cargo test --manifest-path src-tauri/Cargo.toml --locked --tests
 ```
 
-The fixture preparation script generates a new local test-only RSA key and its
-matching public JWKS. The private fixture remains ignored and is never uploaded.
-It is used only by the mocked Teams transport tests, never by the desktop app.
+Current Windows checks: 171 UI cases collectively pass, 44 Rust library tests and
+10 core integration tests pass, lint/build/Clippy and the 63-command IPC check pass.
+Full network-transport testing was blocked by the local execution environment's
+socket permissions, not counted as passed. The Mac script runs the full synthetic
+suite before packaging. The real-model smoke test is opt-in and remains ignored.
 
-Tests use synthetic data and local/mock transports. Some transport tests need
-permission to open local sockets. Historical local validation passed 149 UI
-tests and 92 offline Rust tests; three socket-dependent Ollama tests were
-filtered in that environment. Real OS-vault operations, live provider
-networking/billing, real-model quality, and all release platforms are not
-verified by those synthetic results. The latest startup slice passed all 154 UI
-tests and built an optimized Windows GUI executable. Static executable checks
-confirmed the embedded frontend, six sprout icon frames, and GUI subsystem.
-Native visual acceptance remains unverified.
+The test-fixture script creates a local test-only RSA key and matching public JWKS.
+The key is ignored and never uploaded; it is not used by the desktop app.
+Tests do not prove every mailbox, provider billing behavior, or real-model quality.
+Google and Microsoft acceptance is owner-reported; saved refresh/restart and current
+Mac native acceptance require separate checks.
 
-## Layout
-
-`src/` contains the React/TypeScript interface. `src-tauri/` contains the Rust
-backend, migrations, permission declarations, and backend tests. `schemas/`
-holds the IPC contract, and `tests/ui/` holds synthetic interface tests.
-
-This public source export omits personal inboxes, databases, credentials,
-development transcripts, cost ledgers, builder prompts, and build artifacts.
-It preserves runtime source and synthetic tests from local app commit
-`c22de588c8aea639e031dcdc9ee1a7d3517302da`. The export's package scripts omit
-the private development-phase evidence launchers. Dependency versions and
-runtime implementation are unchanged. The earlier Python prototype remains
-at the repository root.
-
-## Guided setup update
-
-Settings -> AI now guides local setup: install/open Ollama, refresh on return,
-choose an installed model or explicitly download one of three suggested models,
-view current-file progress and cancel/retry. RAM-based suggestions are starting
-points, not GPU or summary-quality guarantees. Download never switches providers
-or starts inference. Optional OpenAI/Claude consent remains separate.
-
-New email connections start with an address and recognize supported HIZ domains.
-Other providers are explicitly unavailable; Gmail/Outlook/other universities do
-not become connected by opening webmail. Existing HIZ credentials are preserved.
-
-162 interface tests, lint, frontend build, three new backend unit tests and nine
-integration tests pass. IPC has 60 commands. Native setup acceptance, actual
-model download and new Mac binary validation remain pending.
+See [beta 2 review](BETA-2-REVIEW.md), [email setup](EMAIL-CONNECTIONS.md),
+[publisher setup](EMAIL-PUBLISHER-SETUP.md) and [local AI setup](LOCAL-AI-SETUP.md).
+This public source export omits inboxes, profiles, credentials, cost ledgers,
+private builder prompts, development transcripts and generated build artifacts.
