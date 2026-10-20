@@ -1,6 +1,6 @@
 //! Real SQLite + capability/IPC-schema contract tests (docs/INTERFACES.md §9, foundation).
 use rei_os_lib::{commands, db};
-use rusqlite::Connection;
+use rusqlite::{Connection, OptionalExtension};
 use std::collections::BTreeSet;
 
 fn repo(path: &str) -> String {
@@ -205,7 +205,8 @@ fn ipc_schema_matches_rust_commands() {
             assert!(
                 matches!(
                     module,
-                    "local_setup"
+                    "email_discovery"
+                        | "local_setup"
                         | "commands"
                         | "ai"
                         | "inbox"
@@ -264,4 +265,64 @@ fn csp_has_no_remote_scripts_or_eval() {
     assert!(csp.contains("script-src 'self'"));
     assert!(!csp.contains("unsafe-eval"));
     assert!(!csp.contains("https:") && !csp.contains("*"));
+}
+
+#[test]
+fn email_migration_keeps_legacy_sign_in_and_selected_inbox() {
+    let mut conn = Connection::open_in_memory().unwrap();
+    conn.pragma_update(None, "foreign_keys", "ON").unwrap();
+    for (_, sql) in rei_os_lib::db::MIGRATIONS.iter().take(16) {
+        conn.execute_batch(sql).unwrap();
+    }
+    conn.pragma_update(None, "user_version", 16).unwrap();
+    let now = "2026-10-20T00:00:00Z";
+    let id = rei_os_lib::hiz::configure(
+        &conn,
+        None,
+        &rei_os_lib::hiz::HizSettings {
+            username: "synthetic-owner".into(),
+            initial_count: 50,
+        },
+        now,
+    )
+    .unwrap();
+    rei_os_lib::providers::set_secret_saved(&conn, &id, true, now).unwrap();
+    rei_os_lib::providers::upsert_discovered(
+        &conn,
+        &id,
+        &[("folder".into(), "INBOX".into(), "Inbox".into())],
+        now,
+    )
+    .unwrap();
+    conn.execute("UPDATE provider_sources SET selected=1", [])
+        .unwrap();
+    let before: String = conn
+        .query_row(
+            "SELECT config FROM provider_config WHERE account_id=?1",
+            [&id],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(rei_os_lib::db::migrate(&mut conn).unwrap(), 17);
+    let after: (String, bool) = conn
+        .query_row(
+            "SELECT config,secret_saved FROM provider_config WHERE account_id=?1",
+            [&id],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )
+        .unwrap();
+    assert_eq!(after, (before, true));
+    assert_eq!(
+        rei_os_lib::providers::selected(&conn, &id, "folder").unwrap(),
+        vec!["INBOX"]
+    );
+    assert_eq!(
+        rei_os_lib::email_discovery::require_email(&conn, &id).unwrap(),
+        "hiz_imap"
+    );
+    assert!(conn
+        .query_row("PRAGMA foreign_key_check", [], |_| Ok(()))
+        .optional()
+        .unwrap()
+        .is_none());
 }

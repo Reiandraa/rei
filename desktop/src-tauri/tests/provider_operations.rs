@@ -239,3 +239,48 @@ fn old_channel_roots_are_revisited_for_replies_without_a_root_edit() {
         vec!["root-old"]
     );
 }
+
+#[test]
+fn a_successful_reauthentication_resumes_each_failed_state_without_claiming_a_live_read() {
+    use rei_os_lib::connectors::{self, ConnState, Evidence};
+    for state in [
+        ConnState::Expired,
+        ConnState::PermissionDenied,
+        ConnState::Degraded,
+    ] {
+        let mut c = db::open_in_memory().unwrap();
+        let id = hiz::configure(&c, None, &hiz_settings("synthetic-owner"), NOW).unwrap();
+        connectors::transition(&c, &id, ConnState::Testing, Evidence::Fixture, None, NOW).unwrap();
+        connectors::transition(
+            &c,
+            &id,
+            state,
+            Evidence::Fixture,
+            Some("Synthetic old failure"),
+            NOW,
+        )
+        .unwrap();
+        providers::set_secret_saved(&c, &id, true, NOW).unwrap();
+        providers::upsert_discovered(
+            &c,
+            &id,
+            &[("folder".into(), "INBOX".into(), "Inbox".into())],
+            NOW,
+        )
+        .unwrap();
+        providers::record_authenticated(&c, &id, NOW).unwrap();
+        let account = connectors::get_account(&c, &id).unwrap();
+        assert_eq!(account.state, ConnState::Testing);
+        assert_eq!(account.evidence, Evidence::Fixture);
+        assert!(account.last_error.is_none());
+        rei_os_lib::assistant_workflow::set_workflow(
+            &mut c,
+            NOW,
+            &rei_os_lib::assistant_workflow::WorkflowReq {
+                enabled: true,
+                account_id: Some(id),
+            },
+        )
+        .unwrap();
+    }
+}
