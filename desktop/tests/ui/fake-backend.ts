@@ -16,6 +16,9 @@ export function syntheticBackend() {
     calls.push({ cmd, args });
     const req = (args as { req?: Row } | undefined)?.req;
     switch (cmd) {
+      case 'local_ai_setup':
+        if(req?.action==='inspect')return {platform:'windows',installed:false,memory_gb:8,recommended_model:'qwen3.5:2b',download:{state:'idle',model:'',detail:'',completed:0,total:0}};
+        throw {code:'Unavailable',message:'Setup side effects are not implemented in this general synthetic fixture.'};
       case 'ai_settings':
         if(req?.action==='get')return {revision:0,provider:'local',model:'synthetic-model',local_model:'synthetic-model',openai_saved:false,anthropic_saved:false,daily_limit:50,used_today:0,available_models:[]};
         throw {code:'Validation',message:'No API action implemented in this general synthetic fixture.'};

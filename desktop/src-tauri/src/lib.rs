@@ -9,11 +9,14 @@ pub mod connectors;
 pub mod crypto;
 pub mod dates;
 pub mod db;
+pub mod email_discovery;
 pub mod files;
 pub mod guard;
 pub mod hiz;
 pub mod inbox;
 pub mod life;
+pub mod local_setup;
+pub mod mail_cloud;
 pub mod memory;
 pub mod notifications;
 pub mod oauth;
@@ -57,6 +60,10 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::app_status,
             ai::ai_settings,
+            email_discovery::email_discover,
+            email_discovery::email_configure,
+            connections::email_sign_in,
+            local_setup::local_ai_setup,
             assistant::assistant_summary_get,
             assistant::assistant_summary_refresh,
             assistant::assistant_memory,

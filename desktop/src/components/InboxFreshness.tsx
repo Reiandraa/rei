@@ -12,7 +12,7 @@ export function InboxFreshness({showLink=true}:{showLink?:boolean}) {
   },[]);
   if(failed)return <p className="muted" aria-label="Email status">Email status is unavailable. {showLink && <a href="#/settings">Check connection</a>}</p>;
   if(!status)return null;
-  const accounts=status.accounts.filter(a=>a.provider==='hiz_imap'&&a.sign_in_saved);
+  const accounts=status.accounts.filter(a=>a.kind==='email'&&a.sign_in_saved);
   let text='No saved email sign-in. Stored messages can still be reviewed.';
   if(accounts.some(a=>['expired','permission_denied'].includes(a.state)))text='Email needs a new sign-in. Stored messages are kept.';
   else if(accounts.some(a=>a.fetch_running))text='Checking for new email…';

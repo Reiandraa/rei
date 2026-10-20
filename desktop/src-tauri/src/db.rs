@@ -58,6 +58,10 @@ pub const MIGRATIONS: &[(&str, &str)] = &[
         "0016_assistant_digest",
         include_str!("../migrations/0016_assistant_digest.sql"),
     ),
+    (
+        "0017_email_providers",
+        include_str!("../migrations/0017_email_providers.sql"),
+    ),
 ];
 
 #[derive(Debug)]

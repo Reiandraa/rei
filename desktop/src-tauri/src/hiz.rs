@@ -67,6 +67,9 @@ pub struct HizEndpoint {
 
 enum Target {
     Preset,
+    Mail {
+        host: String,
+    },
     Synthetic {
         addr: SocketAddr,
         server_name: String,
@@ -79,6 +82,24 @@ impl HizEndpoint {
         HizEndpoint {
             target: Target::Preset,
         }
+    }
+    /// Generic email endpoints originate in native discovery/configuration only.
+    pub fn for_account(conn: &Connection, id: &str) -> PRes<Self> {
+        let provider = crate::email_discovery::require_email(conn, id)?;
+        if provider == PROVIDER {
+            return Ok(Self::preset());
+        }
+        if provider != crate::email_discovery::IMAP {
+            return Err(ProviderError::Destination);
+        }
+        let cfg = providers::load_config(conn, id, &provider)?;
+        let host = cfg["host"].as_str().ok_or(ProviderError::Destination)?;
+        if !crate::email_discovery::valid_host(host) || cfg["port"].as_u64() != Some(993) {
+            return Err(ProviderError::Destination);
+        }
+        Ok(Self {
+            target: Target::Mail { host: host.into() },
+        })
     }
     /// Local synthetic TLS server for tests (loopback only, custom test root).
     /// Data read through it is labeled SYNTHETIC_FIXTURE, never live.
@@ -98,7 +119,7 @@ impl HizEndpoint {
     }
     pub fn evidence(&self) -> Evidence {
         match self.target {
-            Target::Preset => Evidence::Live,
+            Target::Preset | Target::Mail { .. } => Evidence::Live,
             Target::Synthetic { .. } => Evidence::Fixture,
         }
     }
@@ -114,13 +135,22 @@ pub fn is_public(ip: std::net::IpAddr) -> bool {
                 || v.is_unspecified()
                 || v.is_broadcast()
                 || v.is_documentation()
+                || v.is_multicast()
+                || v.octets()[0] == 0
+                || v.octets()[0] >= 240
+                || v.octets()[0] == 198 && matches!(v.octets()[1], 18 | 19)
+                || v.octets()[0] == 192 && v.octets()[1] == 0 && v.octets()[2] == 0
                 || v.octets()[0] == 100 && (v.octets()[1] & 0xC0) == 64)
         }
         std::net::IpAddr::V6(v) => {
-            !(v.is_loopback()
-                || v.is_unspecified()
-                || (v.segments()[0] & 0xfe00) == 0xfc00
-                || (v.segments()[0] & 0xffc0) == 0xfe80)
+            (v.segments()[0] & 0xe000) == 0x2000
+                && !(v.is_loopback()
+                    || v.is_unspecified()
+                    || v.is_multicast()
+                    || v.segments()[0] == 0x2002
+                    || v.segments()[0] == 0x2001 && matches!(v.segments()[1], 0 | 0xdb8)
+                    || (v.segments()[0] & 0xfe00) == 0xfc00
+                    || (v.segments()[0] & 0xffc0) == 0xfe80)
         }
     }
 }
@@ -139,8 +169,12 @@ fn tls_config(roots: rustls::RootCertStore) -> PRes<Arc<rustls::ClientConfig>> {
 
 fn connect(ep: &HizEndpoint) -> PRes<imap::Client<Tls>> {
     let (addr, name, roots) = match &ep.target {
-        Target::Preset => {
-            let addrs: Vec<SocketAddr> = (HIZ_HOST, HIZ_PORT)
+        Target::Preset | Target::Mail { .. } => {
+            let host = match &ep.target {
+                Target::Mail { host } => host.as_str(),
+                _ => HIZ_HOST,
+            };
+            let addrs: Vec<SocketAddr> = (host, HIZ_PORT)
                 .to_socket_addrs()
                 .map_err(|_| ProviderError::Network)?
                 .collect();
@@ -150,7 +184,7 @@ fn connect(ep: &HizEndpoint) -> PRes<imap::Client<Tls>> {
             }
             let roots =
                 rustls::RootCertStore::from_iter(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
-            (addr, HIZ_HOST.to_string(), roots)
+            (addr, host.to_string(), roots)
         }
         Target::Synthetic {
             addr,
@@ -264,8 +298,50 @@ pub fn configure(
     Ok(id)
 }
 
+/// Configure an implicitly TLS-protected generic IMAP account after native discovery.
+pub fn configure_generic(
+    conn: &Connection,
+    email: &str,
+    name: &str,
+    username: &str,
+    host: &str,
+    now: &str,
+) -> PRes<String> {
+    crate::email_discovery::parts(email)?;
+    if !crate::email_discovery::valid_host(host)
+        || username.is_empty()
+        || username.len() > 254
+        || username.chars().any(|c| c.is_control())
+    {
+        return Err(ProviderError::Invalid(
+            "invalid discovered email settings".into(),
+        ));
+    }
+    let account = connectors::create_account(conn, Kind::Email, "IMAP", name, now)?;
+    connectors::transition(
+        conn,
+        &account.id,
+        connectors::ConnState::ConsentNeeded,
+        Evidence::None,
+        None,
+        now,
+    )?;
+    providers::save_config(
+        conn,
+        &account.id,
+        crate::email_discovery::IMAP,
+        &serde_json::json!({"email":email,"username":username,"initial_count":50,"host":host,"port":993,"security":"IMAP over TLS"}),
+        now,
+    )?;
+    Ok(account.id)
+}
+
 fn settings_of(conn: &Connection, account_id: &str) -> PRes<HizSettings> {
-    let v = providers::load_config(conn, account_id, PROVIDER)?;
+    let provider = crate::email_discovery::require_email(conn, account_id)?;
+    if !matches!(provider.as_str(), PROVIDER | crate::email_discovery::IMAP) {
+        return Err(ProviderError::Destination);
+    }
+    let v = providers::load_config(conn, account_id, &provider)?;
     Ok(HizSettings {
         username: v["username"].as_str().unwrap_or("").to_string(),
         initial_count: v["initial_count"].as_u64().unwrap_or(50) as u32,
@@ -284,7 +360,7 @@ pub fn sign_in(
 ) -> PRes<Vec<String>> {
     let user = {
         let c = providers::lock(db)?;
-        providers::require_provider(&c, account_id, PROVIDER)?;
+        settings_of(&c, account_id)?;
         settings_of(&c, account_id)?.username
     };
     let res = login(ep, &user, &password).and_then(|mut s| {
@@ -444,7 +520,6 @@ struct Snapshot {
 }
 
 fn snapshot(conn: &Connection, account_id: &str) -> PRes<Snapshot> {
-    providers::require_provider(conn, account_id, PROVIDER)?;
     let s = settings_of(conn, account_id)?;
     let folders = providers::selected(conn, account_id, "folder")?;
     if folders.is_empty() {

@@ -145,6 +145,16 @@ pub fn record_outcome(
 }
 
 pub fn record_authenticated(conn: &Connection, account_id: &str, now: &str) -> PRes<()> {
+    // A successful explicit re-authentication may resume fetching, but is not
+    // evidence that a mailbox read succeeded. Only mark_read_ok can mark Connected.
+    let a = connectors::get_account(conn, account_id)?;
+    use connectors::ConnState::*;
+    if matches!(a.state, NotConfigured | Expired | PermissionDenied) {
+        connectors::transition(conn, account_id, ConsentNeeded, a.evidence, None, now)?;
+    }
+    if connectors::get_account(conn, account_id)?.state != Testing {
+        connectors::transition(conn, account_id, Testing, a.evidence, None, now)?;
+    }
     conn.execute(
         "UPDATE provider_config SET authenticated_at=?1, updated_at=?1 WHERE account_id=?2",
         params![now, account_id],

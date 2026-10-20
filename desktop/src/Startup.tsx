@@ -83,7 +83,7 @@ export function Startup({children}: {children: ReactNode}) {
     return () => { active = false; };
   }, [attempt]);
 
-  return ready ? <>{notice && <div className="boot-notice" role="status"><span>{notice}</span><a href="#/settings">Open Settings</a><button aria-label="Dismiss startup notice" onClick={() => setNotice('')}>Dismiss</button></div>}{children}</> : <BootScreen phase={phase} detail={detail} error={error} retry={() => setAttempt(n => n + 1)}/>;
+  return ready ? <>{notice && <div className="boot-notice" role="status"><span>{notice}</span><a href="#/settings?tab=ai">Set up AI</a><button aria-label="Dismiss startup notice" onClick={() => setNotice('')}>Dismiss</button></div>}{children}</> : <BootScreen phase={phase} detail={detail} error={error} retry={() => setAttempt(n => n + 1)}/>;
 }
 
 export class AppErrorBoundary extends Component<{children: ReactNode}, {failed: boolean}> {

@@ -122,14 +122,59 @@ pub async fn hiz_sign_in(app: tauri::AppHandle, req: HizSignInReq) -> Res<Vec<St
     blocking(move || {
         let _run = providers::RunGuard::start(&id)?;
         let st = app.state::<AppState>();
-        hiz::sign_in(
-            &st.db,
-            &*store()?,
-            &hiz::HizEndpoint::preset(),
-            &id,
-            pw,
-            &now(),
-        )
+        let endpoint = {
+            let c = providers::lock(&st.db)?;
+            hiz::HizEndpoint::for_account(&c, &id)?
+        };
+        hiz::sign_in(&st.db, &*store()?, &endpoint, &id, pw, &now())
+    })
+    .await
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct EmailSignInReq {
+    pub account_id: String,
+    pub password: Option<String>,
+}
+#[tauri::command]
+pub async fn email_sign_in(app: tauri::AppHandle, req: EmailSignInReq) -> Res<Vec<String>> {
+    let password = req.password.map(|p| Secret::new(p.into_bytes()));
+    blocking(move || {
+        let run = providers::RunGuard::start(&req.account_id)?;
+        let st = app.state::<AppState>();
+        let provider = {
+            let c = providers::lock(&st.db)?;
+            crate::email_discovery::require_email(&c, &req.account_id)?
+        };
+        let store = store()?;
+        if matches!(
+            provider.as_str(),
+            crate::email_discovery::GOOGLE | crate::email_discovery::MICROSOFT
+        ) {
+            if password.is_some() {
+                return Err(ProviderError::Invalid(
+                    "use the official browser sign-in for this account".into(),
+                ));
+            }
+            crate::mail_cloud::sign_in(&st.db, &*store, &req.account_id, &run.cancel, &|url| {
+                open::that(url).map_err(|_| ProviderError::Network)
+            })?;
+            Ok(vec!["INBOX".into()])
+        } else {
+            let endpoint = {
+                let c = providers::lock(&st.db)?;
+                hiz::HizEndpoint::for_account(&c, &req.account_id)?
+            };
+            hiz::sign_in(
+                &st.db,
+                &*store,
+                &endpoint,
+                &req.account_id,
+                password.ok_or(ProviderError::SecretMissing)?,
+                &now(),
+            )
+        }
     })
     .await
 }
@@ -255,14 +300,23 @@ fn fetch_account_inner(
     };
     let s = store()?;
     let v = match provider.as_str() {
-        hiz::PROVIDER => serde_json::to_value(hiz::fetch(
-            &st.db,
-            &*s,
-            &hiz::HizEndpoint::preset(),
-            account_id,
-            &run.cancel,
-            &now(),
-        )?),
+        hiz::PROVIDER | crate::email_discovery::IMAP => {
+            let endpoint = {
+                let c = providers::lock(&st.db)?;
+                hiz::HizEndpoint::for_account(&c, account_id)?
+            };
+            serde_json::to_value(hiz::fetch(
+                &st.db,
+                &*s,
+                &endpoint,
+                account_id,
+                &run.cancel,
+                &now(),
+            )?)
+        }
+        crate::email_discovery::GOOGLE | crate::email_discovery::MICROSOFT => Ok(
+            crate::mail_cloud::fetch(&st.db, &*s, account_id, &run.cancel, &now())?,
+        ),
         teams::PROVIDER => serde_json::to_value(teams::fetch(
             &st.db,
             &*s,
@@ -322,6 +376,12 @@ pub fn disconnect(
         let l = teams::linked(conn, account_id)?;
         teams::sign_out(store, conn, account_id)?;
         l
+    } else if matches!(
+        provider.as_str(),
+        crate::email_discovery::GOOGLE | crate::email_discovery::MICROSOFT
+    ) {
+        crate::mail_cloud::disconnect(store, account_id)?;
+        vec![account_id.to_string()]
     } else {
         hiz::forget_password(store, account_id)?;
         vec![account_id.to_string()]

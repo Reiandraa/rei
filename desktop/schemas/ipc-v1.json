@@ -3,8 +3,20 @@
   "note": "Commands implemented through the planner phase. Checked against Rust (src-tauri/tests/integration.rs) and TypeScript (scripts/tools/check-ipc-schema.mjs). List responses name the item fields.",
   "commands": {
     "ai_settings": {
-      "request": ["req"],
-      "response": ["revision","provider","model","local_model","openai_saved","anthropic_saved","daily_limit","used_today","available_models"]
+      "request": [
+        "req"
+      ],
+      "response": [
+        "revision",
+        "provider",
+        "model",
+        "local_model",
+        "openai_saved",
+        "anthropic_saved",
+        "daily_limit",
+        "used_today",
+        "available_models"
+      ]
     },
     "app_status": {
       "request": null,
@@ -946,6 +958,45 @@
         "text",
         "hash"
       ]
+    },
+    "local_ai_setup": {
+      "request": [
+        "req"
+      ],
+      "response": [
+        "platform",
+        "installed",
+        "memory_gb",
+        "recommended_model",
+        "download"
+      ]
+    },
+    "email_discover": {
+      "request": [
+        "req"
+      ],
+      "response": [
+        "profile_id",
+        "kind",
+        "email",
+        "display_name",
+        "username",
+        "server",
+        "publisher_ready",
+        "detail"
+      ]
+    },
+    "email_configure": {
+      "request": [
+        "req"
+      ],
+      "response": "string"
+    },
+    "email_sign_in": {
+      "request": [
+        "req"
+      ],
+      "response": "string[]"
     }
   }
 }

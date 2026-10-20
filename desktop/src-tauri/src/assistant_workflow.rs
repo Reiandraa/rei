@@ -2,7 +2,7 @@
 //! No credentials, model output, provider I/O or account data leave this module through IPC.
 use crate::auto_academic::{self, AutoSetReq, AutoSettings};
 use crate::commands::{AppState, IpcError};
-use crate::{connections, hiz, providers, time};
+use crate::{connections, providers, time};
 use rusqlite::{Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
 
@@ -34,7 +34,7 @@ pub fn set_workflow(conn: &mut Connection, now: &str, req: &WorkflowReq) -> Res<
                 "Connect your university email first.",
             )
         })?;
-        providers::require_provider(conn, id, hiz::PROVIDER)?;
+        crate::email_discovery::require_email(conn, id)?;
         let (saved, state): (bool, String) = conn.query_row(
             "SELECT p.secret_saved,a.state FROM provider_config p JOIN connector_accounts a ON a.id=p.account_id WHERE p.account_id=?1",
             [id], |r| Ok((r.get(0)?,r.get(1)?)))?;

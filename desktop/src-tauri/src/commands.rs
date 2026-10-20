@@ -10,6 +10,10 @@ pub const IPC_VERSION: u32 = 1;
 pub const COMMANDS: &[&str] = &[
     "app_status",
     "ai_settings",
+    "local_ai_setup",
+    "email_discover",
+    "email_configure",
+    "email_sign_in",
     "assistant_summary_get",
     "assistant_summary_refresh",
     "assistant_memory",
