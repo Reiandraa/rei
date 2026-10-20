@@ -107,7 +107,7 @@ export function SettingsScreen() {
     <div role="tabpanel" id="settings-panel" aria-labelledby={`settings-tab-${tab}`}>
     {tab==='connections' && <><AutomaticInbox onAdvanced={()=>{chooseTab('ai');}}/>
       <details className="settings-disclosure" open={emailOpen} onToggle={e=>setEmailOpen(e.currentTarget.open)}><summary><strong>Email preferences</strong><span>Choose mail folders or how often to check.</span></summary>{emailOpen && <ConnectionsPanel showTeams={false} compact onChanged={()=>{window.dispatchEvent(new Event('rei-assistant-changed'));}}/>}</details>
-      <p className="integration-roadmap">Sources · HIZ email. Microsoft Power Apps is planned; it is not connected yet.</p></>}
+      <p className="integration-roadmap">Sources · Email connections are managed above. Microsoft Power Apps is planned; it is not connected yet.</p></>}
     {tab==='ai' && <AiSettings localControls={<LocalAiSettings/>}/>}
     {tab==='appearance' && <>
     <section className="card appearance-card" aria-label={s.settings.controls}><span className="overline">MAKE IT YOURS</span><h2>Appearance</h2><p className="muted">A calm workspace, in your colours.</p>

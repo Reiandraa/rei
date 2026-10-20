@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api, asIpcError, sentDay, isApiModel, aiName, type Candidate, type InboxOverview, type SourceDetail, type SourceSummary } from '../ipc';
 
 const CHANNEL: Record<string, string> = {
-  hiz_email: 'HIZ email (@stud.uni-saarland.de)', teams_chat: 'Teams chats', teams_channel: 'Teams channels', manual: 'Pasted by you',
+  hiz_email: 'Email', teams_chat: 'Teams chats', teams_channel: 'Teams channels', manual: 'Pasted by you',
 };
 const STATE: Record<string, string> = {
   not_configured: 'Not set up', consent_needed: 'Waiting for your permission',

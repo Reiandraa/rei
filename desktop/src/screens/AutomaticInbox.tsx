@@ -29,7 +29,7 @@ export function AutomaticInbox({ onAdvanced }: { onAdvanced?: () => void }) {
     const refresh = () => void load(); window.addEventListener('rei-assistant-changed',refresh);
     return () => { invalidate(); clearInterval(t); window.removeEventListener('rei-assistant-changed',refresh); };
   }, [load, invalidate]);
-  const account = data?.sources.accounts.find(a => a.provider === 'hiz_imap' && a.sign_in_saved && a.state !== 'not_configured') ?? data?.sources.accounts.find(a => a.provider === 'hiz_imap');
+  const account = data?.sources.accounts.find(a => a.kind === 'email' && a.sign_in_saved && a.state !== 'not_configured') ?? data?.sources.accounts.find(a => a.kind === 'email' && a.state !== 'not_configured');
   const savedName = typeof account?.config.username === 'string' ? account.config.username : '';
   useEffect(() => { if (savedName) setUsername(savedName); }, [savedName]);
   const needsLogin = !account?.sign_in_saved || ['not_configured','expired','permission_denied'].includes(account.state);
@@ -65,7 +65,7 @@ export function AutomaticInbox({ onAdvanced }: { onAdvanced?: () => void }) {
     <p className="muted">Connect once. REI checks your email, separates important updates from routine messages, and prepares tasks for your daily review.</p>
     {!data ? <p role="status">Loading your connection…</p> : <>
       {!data.sources.os_vault_available && <p role="alert">Secure sign-in storage is unavailable. Nothing can be saved until it is working.</p>}
-      {needsLogin && !account && !providerChosen ? <EmailSetup onHiz={id=>{setUsername(id);setPassword('');setError(null);setProviderChosen(true);}}/> : needsLogin ? <form onSubmit={e => void connect(e)} aria-label="Connect university email"><fieldset disabled={busy || !data.sources.os_vault_available}>
+      {needsLogin && !providerChosen ? <EmailSetup storageReady={data.sources.os_vault_available} account={account} onConnected={load} onHiz={id=>{setUsername(id);setPassword('');setError(null);setProviderChosen(true);}}/> : needsLogin ? <form onSubmit={e => void connect(e)} aria-label="Connect university email"><fieldset disabled={busy || !data.sources.os_vault_available}>
         <div className="email-provider-heading"><strong>Saarland University · HIZ email</strong>{!account && <button type="button" onClick={()=>{setPassword('');setUsername('');setError(null);setProviderChosen(false);}}>Change email</button>}</div>
         <label className="field">University ID<input autoComplete="username" value={username} disabled={Boolean(account?.sign_in_saved)} onChange={e=>setUsername(e.target.value)} required maxLength={254} /></label>
         <p className="muted">Use your HIZ webmail sign-in ID and password. The ID can differ from your email address or Microsoft login. Server settings are filled in for you. Your password stays in this computer’s secure storage.</p>
@@ -73,7 +73,7 @@ export function AutomaticInbox({ onAdvanced }: { onAdvanced?: () => void }) {
         <p className="muted">New connections start with the latest 50 Inbox messages. Existing folder choices are kept. Nothing is marked read or deleted.</p>
         <button className="primary" type="submit" disabled={!username.trim() || !password}>{busy ? 'Connecting…' : account ? 'Sign in and resume' : 'Connect and start'}</button>
       </fieldset></form> : <>
-        <div className="connection-summary"><span className="connection-dot" /><div><strong>University email</strong><small>{savedName || 'Saved sign-in'} · {account.evidence === 'fixture' ? 'Synthetic test connection only' : 'Sign-in saved securely'}</small></div><span className="connection-state">{on ? 'Automatic' : 'Paused'}</span></div>
+        <div className="connection-summary"><span className="connection-dot" /><div><strong>Email</strong><small>{savedName || 'Saved sign-in'} · {account.evidence === 'fixture' ? 'Synthetic test connection only' : 'Sign-in saved securely'}</small></div><span className="connection-state">{on ? 'Automatic' : 'Paused'}</span></div>
         <p className="muted">{account.fetch_running ? 'Checking for new messages…' : `Last successful check: ${when(account.last_read_ok_at)}`} · {account.stored_messages} stored</p>
         {account.last_error && <p role="alert">{account.last_error} {on && ['degraded'].includes(account.state) && 'Your sign-in is kept; REI will retry automatically.'}</p>}
         {on && problem === 'offline' && <p role="status">Email stays connected. {isApiModel(data.assistant.model)?<>{data.assistant.worker_detail} <a href="#/settings?tab=ai">Open AI settings →</a></>:'Open Ollama on this computer; REI retries local reading automatically.'}</p>}
